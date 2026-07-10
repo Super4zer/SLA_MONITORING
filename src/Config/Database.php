@@ -17,7 +17,7 @@ class Database
             $port = Env::get('DB_PORT', '3306');
             $dbName = Env::get('DB_NAME', 'sla_monitoring');
             $user = Env::get('DB_USER', 'root');
-            $pass = Env::get('DB_PASS', '');
+            $pass = Env::get('DB_PASS', 'reza1234');
 
             $dsn = "mysql:host={$host};port={$port};dbname={$dbName};charset=utf8mb4";
 

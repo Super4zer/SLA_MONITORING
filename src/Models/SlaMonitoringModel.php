@@ -41,21 +41,18 @@ class SlaMonitoringModel
         return (int) $this->db->lastInsertId();
     }
 
-    public function getLatestUnrespondedComplaint(string $groupId): ?array
+    public function getAllUnrespondedComplaints(string $groupId): array
     {
         $stmt = $this->db->prepare("
             SELECT * FROM ts_sla_monitoring 
             WHERE group_id = :group_id 
               AND time_responded IS NULL 
               AND is_resolved_by_explanation = 0
-            ORDER BY time_received DESC 
-            LIMIT 1
+            ORDER BY time_received ASC 
         ");
 
         $stmt->execute(['group_id' => $groupId]);
-        $result = $stmt->fetch();
-
-        return $result ?: null;
+        return $stmt->fetchAll();
     }
 
     public function updateResponse(
