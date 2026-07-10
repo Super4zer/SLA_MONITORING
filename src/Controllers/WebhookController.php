@@ -55,7 +55,7 @@ class WebhookController
         //   "pushName": "Nama Pengirim",
         //   "isGroup": true/false,
         //   "group": {
-        //     "sender": "6281234567890-1234567890@g.us",   <-- group ID
+        //     "sender": "1234567890@g.us",   <-- group ID
         //     "subject": "Nama Grup",
         //     ...
         //   },
@@ -73,9 +73,9 @@ class WebhookController
 
         // Ambil field-field yang kita butuhkan sesuai format nyata Wablas
         $isGroup  = (bool)($data['isGroup'] ?? false);
-        $groupObj = $data['group'] ?? [];
-        $groupId  = $groupObj['sender'] ?? null;   // group ID ada di group.sender
-        $senderPhone  = $data['phone'] ?? null;    // nomor pengirim ada di phone
+$groupObj = $data['group'] ?? [];
+$groupId  = $groupObj['group_id'] ?? null;   // ✅ ID grup asli ada di sini
+        $senderPhone  = $groupObj['sender'] ?? null;// nomor pengirim ada di phone
         $messageContent = $data['message'] ?? '';
 
         // Normalize phone number (hapus + jika ada)
