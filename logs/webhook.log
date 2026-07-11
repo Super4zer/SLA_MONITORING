@@ -181,3 +181,152 @@
 [2026-07-10 15:23:08] {"id":"3f74708e-5610-4906-979d-7ff0525bb429","pushName":"","isGroup":true,"group":{"group_id":"120363410859443191","sender":"6285770715562","subject":"MAGANG DSI","owner":"6285770715562","desc":"MAGANG DSI","participants":[{"jid":"152552976949450@lid","is_admin":false},{"jid":"279121334644811@lid","is_admin":false},{"jid":"34304474271815@lid","is_admin":true}]},"message":"woi \u003c~ One one","phone":"120363410859443191","messageType":"text","file":"","url":"","mimeType":"","deviceId":"6BI2UF","sender":"6285770715562","isFromMe":true,"timestamp":"2026-07-10T08:23:08Z","profileImage":"","ticketId":"28d2e2a5-cbb0-425f-aa41-a9a90f5de1cc","assigned":"da1c6678-410b-402a-9319-9cb043eda3df"}
 [2026-07-10 15:26:39] {"id":"d9f11a48-075a-496b-b038-871d6e74acee","pushName":"","isGroup":true,"group":{"group_id":"120363314433398674","sender":"6282327395632","subject":"PPLG MABAR🤙🏻🤙🏻","owner":"6285770715562","desc":"PPLG MABAR🤙🏻🤙🏻","participants":[{"jid":"31160121954506@lid","is_admin":true},{"jid":"17858557964318@lid","is_admin":true},{"jid":"244761596284932@lid","is_admin":true},{"jid":"197710397362421@lid","is_admin":true},{"jid":"18812040650986@lid","is_admin":true},{"jid":"44131007131705@lid","is_admin":true},{"jid":"25890146808004@lid","is_admin":true},{"jid":"34965345595517@lid","is_admin":true},{"jid":"73916856946797@lid","is_admin":true},{"jid":"48365727420540@lid","is_admin":true},{"jid":"224536712736882@lid","is_admin":true},{"jid":"34304474271815@lid","is_admin":true},{"jid":"114830346346499@lid","is_admin":true},{"jid":"165515288932498@lid","is_admin":true},{"jid":"203822152560650@lid","is_admin":true},{"jid":"233543645057255@lid","is_admin":true},{"jid":"175543936880787@lid","is_admin":true},{"jid":"206335178186922@lid","is_admin":true},{"jid":"279121334644811@lid","is_admin":true},{"jid":"177691437301813@lid","is_admin":true},{"jid":"107696405639268@lid","is_admin":true},{"jid":"169931035402243@lid","is_admin":true},{"jid":"45969756430551@lid","is_admin":true},{"jid":"253429393977359@lid","is_admin":true},{"jid":"105591989125306@lid","is_admin":true},{"jid":"10806775259187@lid","is_admin":true},{"jid":"57002940186790@lid","is_admin":true},{"jid":"174633571635213@lid","is_admin":true},{"jid":"152552976949450@lid","is_admin":true},{"jid":"56444560879710@lid","is_admin":true},{"jid":"227152800817319@lid","is_admin":true},{"jid":"164712415281382@lid","is_admin":true},{"jid":"47288227512466@lid","is_admin":true},{"jid":"270003270070385@lid","is_admin":true},{"jid":"19915780161668@lid","is_admin":true},{"jid":"257135397044479@lid","is_admin":true}]},"message":"","phone":"120363314433398674","messageType":"text","file":"","url":"","mimeType":"","deviceId":"6BI2UF","sender":"6285770715562","isFromMe":false,"timestamp":"2026-07-10T08:26:39Z","profileImage":"https://pps.whatsapp.net/v/t61.24694-24/554540928_773097075756175_7035932388372456231_n.jpg?stp=dst-jpg_s96x96_tt6\u0026ccb=11-4\u0026oh=01_Q5Aa5AGZLaol8TmnEY5NNgEanJ1LUypnhu2-4d1ljAnqMaqKsQ\u0026oe=6A5DC968\u0026_nc_sid=5e03e0\u0026_nc_cat=111","ticketId":"c6024bfc-c5e5-49a4-b843-f8f9ade3d0db","assigned":"da1c6678-410b-402a-9319-9cb043eda3df"}
 [2026-07-10 15:26:40] {"id":"00391515-c450-4982-b3d9-775835639b60","pushName":"","isGroup":true,"group":{"group_id":"120363314433398674","sender":"6282327395632","subject":"PPLG MABAR🤙🏻🤙🏻","owner":"6285770715562","desc":"PPLG MABAR🤙🏻🤙🏻","participants":[{"jid":"31160121954506@lid","is_admin":true},{"jid":"17858557964318@lid","is_admin":true},{"jid":"244761596284932@lid","is_admin":true},{"jid":"197710397362421@lid","is_admin":true},{"jid":"18812040650986@lid","is_admin":true},{"jid":"44131007131705@lid","is_admin":true},{"jid":"25890146808004@lid","is_admin":true},{"jid":"34965345595517@lid","is_admin":true},{"jid":"73916856946797@lid","is_admin":true},{"jid":"48365727420540@lid","is_admin":true},{"jid":"224536712736882@lid","is_admin":true},{"jid":"34304474271815@lid","is_admin":true},{"jid":"114830346346499@lid","is_admin":true},{"jid":"165515288932498@lid","is_admin":true},{"jid":"203822152560650@lid","is_admin":true},{"jid":"233543645057255@lid","is_admin":true},{"jid":"175543936880787@lid","is_admin":true},{"jid":"206335178186922@lid","is_admin":true},{"jid":"279121334644811@lid","is_admin":true},{"jid":"177691437301813@lid","is_admin":true},{"jid":"107696405639268@lid","is_admin":true},{"jid":"169931035402243@lid","is_admin":true},{"jid":"45969756430551@lid","is_admin":true},{"jid":"253429393977359@lid","is_admin":true},{"jid":"105591989125306@lid","is_admin":true},{"jid":"10806775259187@lid","is_admin":true},{"jid":"57002940186790@lid","is_admin":true},{"jid":"174633571635213@lid","is_admin":true},{"jid":"152552976949450@lid","is_admin":true},{"jid":"56444560879710@lid","is_admin":true},{"jid":"227152800817319@lid","is_admin":true},{"jid":"164712415281382@lid","is_admin":true},{"jid":"47288227512466@lid","is_admin":true},{"jid":"270003270070385@lid","is_admin":true},{"jid":"19915780161668@lid","is_admin":true},{"jid":"257135397044479@lid","is_admin":true}]},"message":"bu utami mau dibelike kenang kenangan pada setuju apa gak","phone":"120363314433398674","messageType":"text","file":"","url":"","mimeType":"","deviceId":"6BI2UF","sender":"6285770715562","isFromMe":false,"timestamp":"2026-07-10T08:26:39Z","profileImage":"https://pps.whatsapp.net/v/t61.24694-24/554540928_773097075756175_7035932388372456231_n.jpg?stp=dst-jpg_s96x96_tt6\u0026ccb=11-4\u0026oh=01_Q5Aa5AGZLaol8TmnEY5NNgEanJ1LUypnhu2-4d1ljAnqMaqKsQ\u0026oe=6A5DC968\u0026_nc_sid=5e03e0\u0026_nc_cat=111","ticketId":"c6024bfc-c5e5-49a4-b843-f8f9ade3d0db","assigned":"da1c6678-410b-402a-9319-9cb043eda3df"}
+[2026-07-11 08:56:18] {
+    "isGroup": true,
+    "group": {
+        "sender": "120363410859443191@g.us",
+        "subject": "Grup Komplain Test"
+    },
+    "phone": "628327395632",
+    "message": "Halo, ini komplain saya",
+    "pushName": "Klien Test"
+}
+[2026-07-11 08:56:57] {
+    "isGroup": true,
+    "group": {
+        "sender": "120363410859443191@g.us",
+        "subject": "Grup Komplain Test"
+    },
+    "phone": "628327395632",
+    "message": "Halo, ini komplain saya",
+    "pushName": "Klien Test"
+}
+[2026-07-11 09:02:32] {
+    "isGroup": true,
+    "group": {
+        "sender": "120363410859443191@g.us",
+        "subject": "Grup Komplain Test"
+    },
+    "phone": "628327395632",
+    "message": "Halo, ini komplain saya",
+    "pushName": "Klien Test"
+}
+[2026-07-11 09:03:54] {
+    "isGroup": true,
+    "group": {
+        "sender": "120363410859443191@g.us",
+        "subject": "Grup Komplain Test"
+    },
+    "phone": "628327395632",
+    "message": "Halo, ini komplain saya",
+    "pushName": "Klien Test"
+}
+[2026-07-11 09:03:56] {
+    "isGroup": true,
+    "group": {
+        "sender": "120363410859443191@g.us",
+        "subject": "Grup Komplain Test"
+    },
+    "phone": "628327395632",
+    "message": "Halo, ini komplain saya",
+    "pushName": "Klien Test"
+}
+[2026-07-11 09:03:57] {
+    "isGroup": true,
+    "group": {
+        "sender": "120363410859443191@g.us",
+        "subject": "Grup Komplain Test"
+    },
+    "phone": "628327395632",
+    "message": "Halo, ini komplain saya",
+    "pushName": "Klien Test"
+}
+[2026-07-11 09:06:27] {
+    "isGroup": true,
+    "group": {
+        "group_id": "120363410859443191",
+        "sender": "6285770715562"
+    },
+    "phone": "120363410859443191",
+    "message": "Halo, ini komplain saya",
+    "pushName": "Klien Test"
+}
+[2026-07-11 09:07:02] {
+    "isGroup": true,
+    "group": {
+        "group_id": "120363410859443191",
+        "sender": "6285770715562"
+    },
+    "phone": "6285770715562",
+    "message": "Halo, ini komplain saya",
+    "pushName": "Klien Test"
+}
+[2026-07-11 09:07:41] {
+    "isGroup": true,
+    "group": {
+        "group_id": "120363410859443191",
+        "sender": "6285770715562"
+    },
+    "phone": "120363410859443191",
+    "message": "Halo, ini komplain saya",
+    "pushName": "Klien Test"
+}
+[2026-07-11 09:08:14] {
+    "isGroup": true,
+    "group": {
+        "group_id": "120363410859443191",
+        "sender": "6285770715562"
+    },
+    "phone": "120363410859443191",
+    "message": "Halo, ini komplain saya",
+    "pushName": "Klien Test"
+}
+[2026-07-11 09:08:42] {
+    "isGroup": true,
+    "group": {
+        "group_id": "120363410859443191",
+        "sender": "628999999999"
+    },
+    "phone": "120363410859443191",
+    "message": "Halo, ini komplain saya",
+    "pushName": "Klien Test"
+}
+[2026-07-11 09:09:16] {
+    "isGroup": true,
+    "group": {
+        "group_id": "120363410859443191",
+        "sender": "6285770715562"
+    },
+    "phone": "120363410859443191",
+    "message": "Baik pak, akan kami proses.",
+    "pushName": "CS RIDHO"
+}
+[2026-07-11 09:16:36] {"id":"5ab8c94a-888d-4cd3-8cd2-d9b77c96e320","pushName":"","isGroup":true,"group":{"group_id":"120363410859443191","sender":"6282327395632","subject":"MAGANG DSI","owner":"6285770715562","desc":"MAGANG DSI","participants":[{"jid":"152552976949450@lid","is_admin":false},{"jid":"279121334644811@lid","is_admin":false},{"jid":"34304474271815@lid","is_admin":true}]},"message":"","phone":"120363410859443191","messageType":"text","file":"","url":"","mimeType":"","deviceId":"6BI2UF","sender":"6285770715562","isFromMe":false,"timestamp":"2026-07-11T02:16:36Z","profileImage":"","ticketId":"28d2e2a5-cbb0-425f-aa41-a9a90f5de1cc","assigned":"da1c6678-410b-402a-9319-9cb043eda3df"}
+[2026-07-11 09:16:38] {"id":"c355211e-5d04-4416-9de8-514561a25950","pushName":"","isGroup":true,"group":{"group_id":"120363410859443191","sender":"6282327395632","subject":"MAGANG DSI","owner":"6285770715562","desc":"MAGANG DSI","participants":[{"jid":"152552976949450@lid","is_admin":false},{"jid":"279121334644811@lid","is_admin":false},{"jid":"34304474271815@lid","is_admin":true}]},"message":"Berani berbuat berani bertanggung jawab \u003c~ do","phone":"120363410859443191","messageType":"text","file":"","url":"","mimeType":"","deviceId":"6BI2UF","sender":"6285770715562","isFromMe":false,"timestamp":"2026-07-11T02:16:36Z","profileImage":"","ticketId":"28d2e2a5-cbb0-425f-aa41-a9a90f5de1cc","assigned":"da1c6678-410b-402a-9319-9cb043eda3df"}
+[2026-07-11 09:17:11] {"id":"b0332b5b-642e-4837-a0d9-76227b1f2773","pushName":"","isGroup":true,"group":{"group_id":"120363410859443191","sender":"6285770715562","subject":"MAGANG DSI","owner":"6285770715562","desc":"MAGANG DSI","participants":[{"jid":"152552976949450@lid","is_admin":false},{"jid":"279121334644811@lid","is_admin":false},{"jid":"34304474271815@lid","is_admin":true}]},"message":"do \u003c~ yo","phone":"120363410859443191","messageType":"text","file":"","url":"","mimeType":"","deviceId":"6BI2UF","sender":"6285770715562","isFromMe":true,"timestamp":"2026-07-11T02:17:11Z","profileImage":"","ticketId":"28d2e2a5-cbb0-425f-aa41-a9a90f5de1cc","assigned":"da1c6678-410b-402a-9319-9cb043eda3df"}
+[2026-07-11 09:30:21] {"id":"e6146394-4bc5-4b03-a9f1-a57cf3859e9a","pushName":"","isGroup":true,"group":{"group_id":"120363410859443191","sender":"6282327395632","subject":"MAGANG DSI","owner":"6285770715562","desc":"MAGANG DSI","participants":[{"jid":"152552976949450@lid","is_admin":false},{"jid":"279121334644811@lid","is_admin":false},{"jid":"34304474271815@lid","is_admin":true}]},"message":"RIDHO GUA MAU KOMPLAIN","phone":"120363410859443191","messageType":"text","file":"","url":"","mimeType":"","deviceId":"6BI2UF","sender":"6285770715562","isFromMe":false,"timestamp":"2026-07-11T02:30:21Z","profileImage":"","ticketId":"28d2e2a5-cbb0-425f-aa41-a9a90f5de1cc","assigned":"da1c6678-410b-402a-9319-9cb043eda3df"}
+[2026-07-11 09:31:07] {"id":"4b631e05-af0e-4945-99e2-da6c14674c24","pushName":"","isGroup":true,"group":{"group_id":"120363410859443191","sender":"6285770715562","subject":"MAGANG DSI","owner":"6285770715562","desc":"MAGANG DSI","participants":[{"jid":"152552976949450@lid","is_admin":false},{"jid":"279121334644811@lid","is_admin":false},{"jid":"34304474271815@lid","is_admin":true}]},"message":"RIDHO GUA MAU KOMPLAIN \u003c~ sabtu libur","phone":"120363410859443191","messageType":"text","file":"","url":"","mimeType":"","deviceId":"6BI2UF","sender":"6285770715562","isFromMe":true,"timestamp":"2026-07-11T02:31:06Z","profileImage":"","ticketId":"28d2e2a5-cbb0-425f-aa41-a9a90f5de1cc","assigned":"da1c6678-410b-402a-9319-9cb043eda3df"}
+[2026-07-11 09:31:59] {"id":"96e06105-2d34-4e4a-8523-dc2e492a87ae","pushName":"","isGroup":true,"group":{"group_id":"120363410859443191","sender":"6288806250377","subject":"MAGANG DSI","owner":"6285770715562","desc":"MAGANG DSI","participants":[{"jid":"152552976949450@lid","is_admin":false},{"jid":"279121334644811@lid","is_admin":false},{"jid":"34304474271815@lid","is_admin":true}]},"message":"p","phone":"120363410859443191","messageType":"text","file":"","url":"","mimeType":"","deviceId":"6BI2UF","sender":"6285770715562","isFromMe":false,"timestamp":"2026-07-11T02:31:59Z","profileImage":"","ticketId":"28d2e2a5-cbb0-425f-aa41-a9a90f5de1cc","assigned":"da1c6678-410b-402a-9319-9cb043eda3df"}
+[2026-07-11 09:33:46] {"id":"06a5f468-0e78-4638-a8d3-514ad68cb7a9","pushName":"","isGroup":true,"group":{"group_id":"120363410859443191","sender":"6288806250377","subject":"MAGANG DSI","owner":"6285770715562","desc":"MAGANG DSI","participants":[{"jid":"152552976949450@lid","is_admin":false},{"jid":"279121334644811@lid","is_admin":false},{"jid":"34304474271815@lid","is_admin":true}]},"message":"p","phone":"120363410859443191","messageType":"text","file":"","url":"","mimeType":"","deviceId":"6BI2UF","sender":"6285770715562","isFromMe":false,"timestamp":"2026-07-11T02:33:46Z","profileImage":"","ticketId":"28d2e2a5-cbb0-425f-aa41-a9a90f5de1cc","assigned":"da1c6678-410b-402a-9319-9cb043eda3df"}
+[2026-07-11 09:37:34] {
+    "isGroup": true,
+    "group": {
+        "group_id": "120363410859443191",
+        "sender": "628999999999"
+    },
+    "phone": "120363410859443191",
+    "message": "Halo, ini komplain saya",
+    "pushName": "Klien Test"
+}
+[2026-07-11 09:38:17] {"id":"2da5c3d6-5f04-45c3-84d9-9b17330b1a41","pushName":"","isGroup":true,"group":{"group_id":"120363410859443191","sender":"6285770715562","subject":"MAGANG DSI","owner":"6285770715562","desc":"MAGANG DSI","participants":[{"jid":"152552976949450@lid","is_admin":false},{"jid":"279121334644811@lid","is_admin":false},{"jid":"34304474271815@lid","is_admin":true}]},"message":"hi","phone":"120363410859443191","messageType":"text","file":"","url":"","mimeType":"","deviceId":"6BI2UF","sender":"6285770715562","isFromMe":true,"timestamp":"2026-07-11T02:38:18Z","profileImage":"","ticketId":"28d2e2a5-cbb0-425f-aa41-a9a90f5de1cc","assigned":"da1c6678-410b-402a-9319-9cb043eda3df"}
+[2026-07-11 09:38:30] {"id":"d2f8224f-f8ef-44d0-ad1b-1725ba0a248f","pushName":"","isGroup":true,"group":{"group_id":"120363410859443191","sender":"6285770715562","subject":"MAGANG DSI","owner":"6285770715562","desc":"MAGANG DSI","participants":[{"jid":"152552976949450@lid","is_admin":false},{"jid":"279121334644811@lid","is_admin":false},{"jid":"34304474271815@lid","is_admin":true}]},"message":"p \u003c~ hi","phone":"120363410859443191","messageType":"text","file":"","url":"","mimeType":"","deviceId":"6BI2UF","sender":"6285770715562","isFromMe":true,"timestamp":"2026-07-11T02:38:29Z","profileImage":"","ticketId":"28d2e2a5-cbb0-425f-aa41-a9a90f5de1cc","assigned":"da1c6678-410b-402a-9319-9cb043eda3df"}
+[2026-07-11 09:38:43] {"id":"0a12602b-448e-4487-b019-ad7339e5928a","pushName":"","isGroup":true,"group":{"group_id":"120363410859443191","sender":"6288806250377","subject":"MAGANG DSI","owner":"6285770715562","desc":"MAGANG DSI","participants":[{"jid":"152552976949450@lid","is_admin":false},{"jid":"279121334644811@lid","is_admin":false},{"jid":"34304474271815@lid","is_admin":true}]},"message":"p","phone":"120363410859443191","messageType":"text","file":"","url":"","mimeType":"","deviceId":"6BI2UF","sender":"6285770715562","isFromMe":false,"timestamp":"2026-07-11T02:38:43Z","profileImage":"","ticketId":"28d2e2a5-cbb0-425f-aa41-a9a90f5de1cc","assigned":"da1c6678-410b-402a-9319-9cb043eda3df"}
+[2026-07-11 09:38:49] {"id":"7589b47e-8611-43ab-b982-415dce2cb466","pushName":"","isGroup":true,"group":{"group_id":"120363410859443191","sender":"6285770715562","subject":"MAGANG DSI","owner":"6285770715562","desc":"MAGANG DSI","participants":[{"jid":"152552976949450@lid","is_admin":false},{"jid":"279121334644811@lid","is_admin":false},{"jid":"34304474271815@lid","is_admin":true}]},"message":"hi","phone":"120363410859443191","messageType":"text","file":"","url":"","mimeType":"","deviceId":"6BI2UF","sender":"6285770715562","isFromMe":true,"timestamp":"2026-07-11T02:38:50Z","profileImage":"","ticketId":"28d2e2a5-cbb0-425f-aa41-a9a90f5de1cc","assigned":"da1c6678-410b-402a-9319-9cb043eda3df"}
+[2026-07-11 09:39:54] {"id":"8eb269ab-e926-4cb2-ac04-1e898f850e2e","pushName":"","isGroup":true,"group":{"group_id":"120363381274546420","sender":"6282327395632","subject":"Member гเ๔ђ๏","owner":"6285770715562","desc":"Member гเ๔ђ๏","participants":[{"jid":"48365727420540@lid","is_admin":true},{"jid":"203822152560650@lid","is_admin":false},{"jid":"281470866296989@lid","is_admin":false},{"jid":"18812040650986@lid","is_admin":false},{"jid":"152552976949450@lid","is_admin":false},{"jid":"17858557964318@lid","is_admin":true},{"jid":"110174668873917@lid","is_admin":false},{"jid":"206335178186922@lid","is_admin":false},{"jid":"253429393977359@lid","is_admin":false},{"jid":"279121334644811@lid","is_admin":true},{"jid":"108783015571465@lid","is_admin":false},{"jid":"47288227512466@lid","is_admin":false},{"jid":"34304474271815@lid","is_admin":false},{"jid":"114830346346499@lid","is_admin":false}]},"message":"@279121334644811","phone":"120363381274546420","messageType":"text","file":"","url":"","mimeType":"","deviceId":"6BI2UF","sender":"6285770715562","isFromMe":false,"timestamp":"2026-07-11T02:39:55Z","profileImage":"https://pps.whatsapp.net/v/t61.24694-24/534421548_25172464365678499_7006684825087859670_n.jpg?stp=dst-jpg_s96x96_tt6\u0026ccb=11-4\u0026oh=01_Q5Aa5AGf8yQvFOgSK0l6QJNlpNRiDXNA3hd1bJpZsT1Sq7ymaA\u0026oe=6A5EB594\u0026_nc_sid=5e03e0\u0026_nc_cat=104","ticketId":"49343c13-8c4b-4c56-a991-774a8fa1eddd","assigned":"da1c6678-410b-402a-9319-9cb043eda3df"}
+[2026-07-11 09:40:14] {"id":"178ddcba-c5d1-4a2b-bfa5-e7a4958046b3","pushName":"","isGroup":true,"group":{"group_id":"120363381274546420","sender":"6285770715562","subject":"Member гเ๔ђ๏","owner":"6285770715562","desc":"Member гเ๔ђ๏","participants":[{"jid":"48365727420540@lid","is_admin":true},{"jid":"203822152560650@lid","is_admin":false},{"jid":"281470866296989@lid","is_admin":false},{"jid":"18812040650986@lid","is_admin":false},{"jid":"152552976949450@lid","is_admin":false},{"jid":"17858557964318@lid","is_admin":true},{"jid":"110174668873917@lid","is_admin":false},{"jid":"206335178186922@lid","is_admin":false},{"jid":"253429393977359@lid","is_admin":false},{"jid":"279121334644811@lid","is_admin":true},{"jid":"108783015571465@lid","is_admin":false},{"jid":"47288227512466@lid","is_admin":false},{"jid":"34304474271815@lid","is_admin":false},{"jid":"114830346346499@lid","is_admin":false}]},"message":"iyah","phone":"120363381274546420","messageType":"text","file":"","url":"","mimeType":"","deviceId":"6BI2UF","sender":"6285770715562","isFromMe":true,"timestamp":"2026-07-11T02:40:13Z","profileImage":"https://pps.whatsapp.net/v/t61.24694-24/534421548_25172464365678499_7006684825087859670_n.jpg?stp=dst-jpg_s96x96_tt6\u0026ccb=11-4\u0026oh=01_Q5Aa5AGf8yQvFOgSK0l6QJNlpNRiDXNA3hd1bJpZsT1Sq7ymaA\u0026oe=6A5EB594\u0026_nc_sid=5e03e0\u0026_nc_cat=104","ticketId":"49343c13-8c4b-4c56-a991-774a8fa1eddd","assigned":"da1c6678-410b-402a-9319-9cb043eda3df"}
+[2026-07-11 09:46:21] {"id":"9c1e5478-878b-4fe6-875d-58da1bc9be5d","pushName":"","isGroup":true,"group":{"group_id":"120363410859443191","sender":"6282327395632","subject":"MAGANG DSI","owner":"6285770715562","desc":"MAGANG DSI","participants":[{"jid":"152552976949450@lid","is_admin":false},{"jid":"279121334644811@lid","is_admin":false},{"jid":"34304474271815@lid","is_admin":true}]},"message":"p","phone":"120363410859443191","messageType":"text","file":"","url":"","mimeType":"","deviceId":"6BI2UF","sender":"6285770715562","isFromMe":false,"timestamp":"2026-07-11T02:46:21Z","profileImage":"","ticketId":"28d2e2a5-cbb0-425f-aa41-a9a90f5de1cc","assigned":"da1c6678-410b-402a-9319-9cb043eda3df"}
+[2026-07-11 09:46:23] {"id":"5d938b45-fdd6-43f0-9792-eb55f4cfa817","pushName":"","isGroup":true,"group":{"group_id":"120363410859443191","sender":"6282327395632","subject":"MAGANG DSI","owner":"6285770715562","desc":"MAGANG DSI","participants":[{"jid":"152552976949450@lid","is_admin":false},{"jid":"279121334644811@lid","is_admin":false},{"jid":"34304474271815@lid","is_admin":true}]},"message":"p","phone":"120363410859443191","messageType":"text","file":"","url":"","mimeType":"","deviceId":"6BI2UF","sender":"6285770715562","isFromMe":false,"timestamp":"2026-07-11T02:46:22Z","profileImage":"","ticketId":"28d2e2a5-cbb0-425f-aa41-a9a90f5de1cc","assigned":"da1c6678-410b-402a-9319-9cb043eda3df"}
+[2026-07-11 09:46:24] {"id":"a7db7dbe-df53-4d78-a9f8-25c94c6e0fe4","pushName":"","isGroup":true,"group":{"group_id":"120363410859443191","sender":"6282327395632","subject":"MAGANG DSI","owner":"6285770715562","desc":"MAGANG DSI","participants":[{"jid":"152552976949450@lid","is_admin":false},{"jid":"279121334644811@lid","is_admin":false},{"jid":"34304474271815@lid","is_admin":true}]},"message":"pp","phone":"120363410859443191","messageType":"text","file":"","url":"","mimeType":"","deviceId":"6BI2UF","sender":"6285770715562","isFromMe":false,"timestamp":"2026-07-11T02:46:22Z","profileImage":"","ticketId":"28d2e2a5-cbb0-425f-aa41-a9a90f5de1cc","assigned":"da1c6678-410b-402a-9319-9cb043eda3df"}
+[2026-07-11 10:04:53] {"id":"56350cad-fa1c-477d-80a2-f61d8c446a6a","pushName":"","isGroup":true,"group":{"group_id":"120363410859443191","sender":"6285770715562","subject":"MAGANG DSI","owner":"6285770715562","desc":"MAGANG DSI","participants":[{"jid":"152552976949450@lid","is_admin":false},{"jid":"279121334644811@lid","is_admin":false},{"jid":"34304474271815@lid","is_admin":true}]},"message":"","phone":"120363410859443191","messageType":"text","file":"","url":"","mimeType":"","deviceId":"6BI2UF","sender":"6285770715562","isFromMe":true,"timestamp":"2026-07-11T03:04:45Z","profileImage":"","ticketId":"28d2e2a5-cbb0-425f-aa41-a9a90f5de1cc","assigned":"da1c6678-410b-402a-9319-9cb043eda3df"}
+[2026-07-11 10:04:54] {"id":"30a8ae14-8459-46be-bcec-7c6ae754a317","pushName":"","isGroup":true,"group":{"group_id":"120363410859443191","sender":"6285770715562","subject":"MAGANG DSI","owner":"6285770715562","desc":"MAGANG DSI","participants":[{"jid":"152552976949450@lid","is_admin":false},{"jid":"279121334644811@lid","is_admin":false},{"jid":"34304474271815@lid","is_admin":true}]},"message":"https://www.apkmirror.com/apk/google-inc/youtube-music/youtube-music-8-40-54-release/","phone":"120363410859443191","messageType":"text","file":"","url":"","mimeType":"","deviceId":"6BI2UF","sender":"6285770715562","isFromMe":true,"timestamp":"2026-07-11T03:04:45Z","profileImage":"","ticketId":"28d2e2a5-cbb0-425f-aa41-a9a90f5de1cc","assigned":"da1c6678-410b-402a-9319-9cb043eda3df"}
+[2026-07-11 10:09:47] {"id":"7a2eb9f4-dbd7-485e-b401-e201aaae975c","pushName":"","isGroup":true,"group":{"group_id":"120363410859443191","sender":"6282327395632","subject":"MAGANG DSI","owner":"6285770715562","desc":"MAGANG DSI","participants":[{"jid":"152552976949450@lid","is_admin":false},{"jid":"279121334644811@lid","is_admin":false},{"jid":"34304474271815@lid","is_admin":true}]},"message":"","phone":"120363410859443191","messageType":"text","file":"","url":"","mimeType":"","deviceId":"6BI2UF","sender":"6285770715562","isFromMe":false,"timestamp":"2026-07-11T03:09:46Z","profileImage":"","ticketId":"28d2e2a5-cbb0-425f-aa41-a9a90f5de1cc","assigned":"da1c6678-410b-402a-9319-9cb043eda3df"}
