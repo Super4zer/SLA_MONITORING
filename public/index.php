@@ -1,5 +1,13 @@
 <?php
 
+// Handle static files for PHP built-in server
+if (php_sapi_name() === 'cli-server') {
+    $path = realpath(__DIR__ . parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH));
+    if ($path && is_file($path) && strpos($path, __DIR__) === 0) {
+        return false;
+    }
+}
+
 require_once __DIR__ . '/../vendor/autoload.php';
 
 use App\Config\Env;
