@@ -32,16 +32,21 @@ Sistem ini adalah backend untuk Monitoring SLA (Service Level Agreement) Custome
    Buat database `sla_monitoring` (atau sesuai konfigurasi), lalu jalankan file migrasi SQL:
    ```bash
    mysql -u root -p sla_monitoring < migrations/01_create_monitoring_tables.sql
+   mysql -u root -p sla_monitoring < migrations/02_create_group_whitelist.sql
    ```
+   *Catatan: Pastikan Anda menambahkan ID grup komplain resmi Anda ke tabel `ts_group_whitelist`.*
 
 4. **Jalankan Server Lokal**
-   Untuk kebutuhan development, Anda bisa menggunakan built-in web server PHP:
+   Untuk kebutuhan development, Anda harus menjalankan server PHP dengan *document root* `public` dan menjadikan `index.php` sebagai *router script*-nya:
    ```bash
-   php -S localhost:8000 -t public
+   php -S localhost:8000 -t public public/index.php
    ```
-   *Note: Pastikan traffic diarahkan ke direktori `public`.*
+   *Note: Perintah di atas memastikan semua request API di-routing dengan benar, sekaligus melayani file HTML/CSS secara otomatis.*
 
 ## Testing Webhook via cURL / Postman
+
+> **PENTING: Payload Wablas**  
+> Struktur payload yang digunakan (`isGroup`, `groupId`, `phone`, `sender`, `message`) merupakan **asumsi umum** webhook. Saat akun Wablas aktif, **selalu cek log mentah (raw payload)** yang tersimpan otomatis di `logs/webhook.log` untuk memastikan nama field sudah sesuai dengan versi API Wablas yang Anda gunakan, dan sesuaikan di `WebhookController.php` bila perlu.
 
 Berikut adalah contoh untuk mensimulasikan webhook dari Wablas:
 

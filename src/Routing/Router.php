@@ -45,12 +45,12 @@ class Router
 
                 $handler = $route['handler'];
 
-                if (is_array($handler) && is_string($handler[0])) {
-                    $controller = new $handler[0]();
-                    $handler[0] = $controller;
-                }
-
                 try {
+                    if (is_array($handler) && is_string($handler[0])) {
+                        $controller = new $handler[0]();
+                        $handler[0] = $controller;
+                    }
+                    
                     $response = call_user_func_array($handler, $params);
                     if (is_array($response) || is_object($response)) {
                         header('Content-Type: application/json');
