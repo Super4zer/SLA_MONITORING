@@ -160,4 +160,4 @@ async function refreshDashboard() {
 
 // Initialization & Polling
 refreshDashboard();
-setInterval(refreshDashboard, 5000);
+setInterval(refreshDashboard, 2000);

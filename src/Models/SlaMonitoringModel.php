@@ -146,4 +146,111 @@ class SlaMonitoringModel
             'id'     => $idMonitoring
         ]);
     }
+
+    public function getSummary(): array
+    {
+        $stmt = $this->db->query("
+        SELECT
+            SUM(CASE WHEN time_responded IS NULL AND is_resolved_by_explanation = 0 
+                     AND TIMESTAMPDIFF(SECOND, time_received, NOW()) <= 180 THEN 1 ELSE 0 END) AS waiting,
+            SUM(CASE WHEN (time_responded IS NULL AND is_resolved_by_explanation = 0 
+                     AND TIMESTAMPDIFF(SECOND, time_received, NOW()) > 180)
+                     OR (sla_seconds > 180 AND is_resolved_by_explanation = 0) THEN 1 ELSE 0 END) AS overdue,
+            SUM(CASE WHEN sla_seconds <= 180 OR is_resolved_by_explanation = 1 THEN 1 ELSE 0 END) AS completed
+        FROM ts_sla_monitoring
+    ");
+        $row = $stmt->fetch();
+        return [
+            'waiting'   => (int) ($row['waiting'] ?? 0),
+            'overdue'   => (int) ($row['overdue'] ?? 0),
+            'completed' => (int) ($row['completed'] ?? 0),
+        ];
+    }
+
+    public function getHistory(
+        ?string $startDate = null,
+        ?string $endDate = null,
+        ?string $groupId = null,
+        int $page = 1,
+        int $perPage = 20
+    ): array {
+        $where = [];
+        $params = [];
+
+        if ($startDate) {
+            $where[] = "time_received >= :start_date";
+            $params['start_date'] = $startDate . ' 00:00:00';
+        }
+        if ($endDate) {
+            $where[] = "time_received <= :end_date";
+            $params['end_date'] = $endDate . ' 23:59:59';
+        }
+        if ($groupId) {
+            $where[] = "group_id = :group_id";
+            $params['group_id'] = $groupId;
+        }
+
+        $whereSql = $where ? 'WHERE ' . implode(' AND ', $where) : '';
+        $offset = ($page - 1) * $perPage;
+
+        // Ambil total data dulu, untuk info pagination di frontend
+        $countStmt = $this->db->prepare("SELECT COUNT(*) as total FROM ts_sla_monitoring $whereSql");
+        $countStmt->execute($params);
+        $total = (int) $countStmt->fetch()['total'];
+
+        $stmt = $this->db->prepare("
+        SELECT * FROM ts_sla_monitoring 
+        $whereSql
+        ORDER BY time_received DESC
+        LIMIT :limit OFFSET :offset
+    ");
+        foreach ($params as $key => $val) {
+            $stmt->bindValue(":$key", $val);
+        }
+        $stmt->bindValue(':limit', $perPage, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return [
+            'data' => $stmt->fetchAll(),
+            'pagination' => [
+                'page' => $page,
+                'per_page' => $perPage,
+                'total' => $total,
+                'total_pages' => (int) ceil($total / $perPage),
+            ],
+        ];
+    }
+
+    public function getStaffPerformance(?string $startDate = null, ?string $endDate = null): array
+    {
+        $where = ["responded_by IS NOT NULL"];
+        $params = [];
+
+        if ($startDate) {
+            $where[] = "time_received >= :start_date";
+            $params['start_date'] = $startDate . ' 00:00:00';
+        }
+        if ($endDate) {
+            $where[] = "time_received <= :end_date";
+            $params['end_date'] = $endDate . ' 23:59:59';
+        }
+
+        $whereSql = 'WHERE ' . implode(' AND ', $where);
+
+        $stmt = $this->db->prepare("
+        SELECT 
+            responded_by,
+            COUNT(*) AS total_respon,
+            ROUND(AVG(sla_seconds)) AS rata_rata_sla_detik,
+            SUM(CASE WHEN status_sla = 'HIJAU' THEN 1 ELSE 0 END) AS tepat_waktu,
+            SUM(CASE WHEN status_sla = 'MERAH' THEN 1 ELSE 0 END) AS terlambat
+        FROM ts_sla_monitoring
+        $whereSql
+        GROUP BY responded_by
+        ORDER BY total_respon DESC
+    ");
+        $stmt->execute($params);
+        return $stmt->fetchAll();
+    }
 }
