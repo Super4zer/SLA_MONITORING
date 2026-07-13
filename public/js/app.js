@@ -18,11 +18,10 @@ function updateClock() {
 setInterval(updateClock, 1000);
 updateClock();
 
-// Formatter for elapsed time
 function formatElapsedTime(dateString) {
     const received = new Date(dateString);
     const now = new Date();
-    const diffSeconds = Math.floor((now - received) / 1000);
+    const diffSeconds = Math.max(0, Math.floor((now - received) / 1000));
 
     const minutes = Math.floor(diffSeconds / 60);
     const seconds = diffSeconds % 60;
@@ -40,7 +39,9 @@ function createTicketElement(ticket, type) {
 
     const groupId = document.createElement('span');
     groupId.className = 'group-id';
-    groupId.textContent = `Group: ${ticket.group_id}`;
+    // Utamakan nama grup (dari JOIN ts_group_whitelist). Fallback ke group_id
+    // mentah kalau grup belum terdaftar di whitelist (group_name akan NULL/kosong).
+    groupId.textContent = `Group: ${ticket.group_name || ticket.group_id}`;
 
     const time = document.createElement('span');
     time.className = 'time';

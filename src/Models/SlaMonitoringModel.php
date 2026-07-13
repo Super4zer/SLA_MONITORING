@@ -83,11 +83,13 @@ class SlaMonitoringModel
     public function getWaiting(int $maxSeconds = 180): array
     {
         $stmt = $this->db->prepare("
-            SELECT * FROM ts_sla_monitoring 
-            WHERE time_responded IS NULL 
-              AND is_resolved_by_explanation = 0
-              AND TIMESTAMPDIFF(SECOND, time_received, NOW()) <= :max_seconds
-            ORDER BY time_received ASC
+            SELECT s.*, g.group_name 
+            FROM ts_sla_monitoring s
+            LEFT JOIN ts_group_whitelist g ON s.group_id = g.group_id
+            WHERE s.time_responded IS NULL 
+              AND s.is_resolved_by_explanation = 0
+              AND TIMESTAMPDIFF(SECOND, s.time_received, NOW()) <= :max_seconds
+            ORDER BY s.time_received ASC
         ");
         $stmt->execute(['max_seconds' => $maxSeconds]);
         return $stmt->fetchAll();
@@ -96,10 +98,12 @@ class SlaMonitoringModel
     public function getOverdue(int $maxSeconds = 180): array
     {
         $stmt = $this->db->prepare("
-            SELECT * FROM ts_sla_monitoring 
-            WHERE (time_responded IS NULL AND TIMESTAMPDIFF(SECOND, time_received, NOW()) > :max_seconds AND is_resolved_by_explanation = 0)
-               OR (sla_seconds > :max_seconds_2 AND is_resolved_by_explanation = 0)
-            ORDER BY time_received DESC
+            SELECT s.*, g.group_name 
+            FROM ts_sla_monitoring s
+            LEFT JOIN ts_group_whitelist g ON s.group_id = g.group_id
+            WHERE (s.time_responded IS NULL AND TIMESTAMPDIFF(SECOND, s.time_received, NOW()) > :max_seconds AND s.is_resolved_by_explanation = 0)
+               OR (s.sla_seconds > :max_seconds_2 AND s.is_resolved_by_explanation = 0)
+            ORDER BY s.time_received DESC
         ");
         $stmt->execute([
             'max_seconds'   => $maxSeconds,
@@ -111,10 +115,12 @@ class SlaMonitoringModel
     public function getCompleted(int $maxSeconds = 180): array
     {
         $stmt = $this->db->prepare("
-            SELECT * FROM ts_sla_monitoring 
-            WHERE sla_seconds <= :max_seconds 
-               OR is_resolved_by_explanation = 1
-            ORDER BY time_received DESC
+            SELECT s.*, g.group_name 
+            FROM ts_sla_monitoring s
+            LEFT JOIN ts_group_whitelist g ON s.group_id = g.group_id
+            WHERE s.sla_seconds <= :max_seconds 
+               OR s.is_resolved_by_explanation = 1
+            ORDER BY s.time_received DESC
         ");
         $stmt->execute(['max_seconds' => $maxSeconds]);
         return $stmt->fetchAll();
@@ -150,15 +156,15 @@ class SlaMonitoringModel
     public function getSummary(): array
     {
         $stmt = $this->db->query("
-        SELECT
-            SUM(CASE WHEN time_responded IS NULL AND is_resolved_by_explanation = 0 
-                     AND TIMESTAMPDIFF(SECOND, time_received, NOW()) <= 180 THEN 1 ELSE 0 END) AS waiting,
-            SUM(CASE WHEN (time_responded IS NULL AND is_resolved_by_explanation = 0 
-                     AND TIMESTAMPDIFF(SECOND, time_received, NOW()) > 180)
-                     OR (sla_seconds > 180 AND is_resolved_by_explanation = 0) THEN 1 ELSE 0 END) AS overdue,
-            SUM(CASE WHEN sla_seconds <= 180 OR is_resolved_by_explanation = 1 THEN 1 ELSE 0 END) AS completed
-        FROM ts_sla_monitoring
-    ");
+            SELECT
+                SUM(CASE WHEN time_responded IS NULL AND is_resolved_by_explanation = 0 
+                         AND TIMESTAMPDIFF(SECOND, time_received, NOW()) <= 180 THEN 1 ELSE 0 END) AS waiting,
+                SUM(CASE WHEN (time_responded IS NULL AND is_resolved_by_explanation = 0 
+                         AND TIMESTAMPDIFF(SECOND, time_received, NOW()) > 180)
+                         OR (sla_seconds > 180 AND is_resolved_by_explanation = 0) THEN 1 ELSE 0 END) AS overdue,
+                SUM(CASE WHEN sla_seconds <= 180 OR is_resolved_by_explanation = 1 THEN 1 ELSE 0 END) AS completed
+            FROM ts_sla_monitoring
+        ");
         $row = $stmt->fetch();
         return [
             'waiting'   => (int) ($row['waiting'] ?? 0),
@@ -178,15 +184,15 @@ class SlaMonitoringModel
         $params = [];
 
         if ($startDate) {
-            $where[] = "time_received >= :start_date";
+            $where[] = "s.time_received >= :start_date";
             $params['start_date'] = $startDate . ' 00:00:00';
         }
         if ($endDate) {
-            $where[] = "time_received <= :end_date";
+            $where[] = "s.time_received <= :end_date";
             $params['end_date'] = $endDate . ' 23:59:59';
         }
         if ($groupId) {
-            $where[] = "group_id = :group_id";
+            $where[] = "s.group_id = :group_id";
             $params['group_id'] = $groupId;
         }
 
@@ -194,16 +200,22 @@ class SlaMonitoringModel
         $offset = ($page - 1) * $perPage;
 
         // Ambil total data dulu, untuk info pagination di frontend
-        $countStmt = $this->db->prepare("SELECT COUNT(*) as total FROM ts_sla_monitoring $whereSql");
+        $countStmt = $this->db->prepare("
+            SELECT COUNT(*) as total 
+            FROM ts_sla_monitoring s
+            $whereSql
+        ");
         $countStmt->execute($params);
         $total = (int) $countStmt->fetch()['total'];
 
         $stmt = $this->db->prepare("
-        SELECT * FROM ts_sla_monitoring 
-        $whereSql
-        ORDER BY time_received DESC
-        LIMIT :limit OFFSET :offset
-    ");
+            SELECT s.*, g.group_name 
+            FROM ts_sla_monitoring s
+            LEFT JOIN ts_group_whitelist g ON s.group_id = g.group_id
+            $whereSql
+            ORDER BY s.time_received DESC
+            LIMIT :limit OFFSET :offset
+        ");
         foreach ($params as $key => $val) {
             $stmt->bindValue(":$key", $val);
         }
@@ -239,17 +251,17 @@ class SlaMonitoringModel
         $whereSql = 'WHERE ' . implode(' AND ', $where);
 
         $stmt = $this->db->prepare("
-        SELECT 
-            responded_by,
-            COUNT(*) AS total_respon,
-            ROUND(AVG(sla_seconds)) AS rata_rata_sla_detik,
-            SUM(CASE WHEN status_sla = 'HIJAU' THEN 1 ELSE 0 END) AS tepat_waktu,
-            SUM(CASE WHEN status_sla = 'MERAH' THEN 1 ELSE 0 END) AS terlambat
-        FROM ts_sla_monitoring
-        $whereSql
-        GROUP BY responded_by
-        ORDER BY total_respon DESC
-    ");
+            SELECT 
+                responded_by,
+                COUNT(*) AS total_respon,
+                ROUND(AVG(sla_seconds)) AS rata_rata_sla_detik,
+                SUM(CASE WHEN status_sla = 'HIJAU' THEN 1 ELSE 0 END) AS tepat_waktu,
+                SUM(CASE WHEN status_sla = 'MERAH' THEN 1 ELSE 0 END) AS terlambat
+            FROM ts_sla_monitoring
+            $whereSql
+            GROUP BY responded_by
+            ORDER BY total_respon DESC
+        ");
         $stmt->execute($params);
         return $stmt->fetchAll();
     }
