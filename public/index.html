@@ -37,20 +37,24 @@
         box-shadow: 0px 20px 40px rgba(0, 0, 0, 0.08);
         overflow: hidden;
         width: 100%;
-        max-width: 1050px; /* Sedikit dilebarkan agar proporsi gambar optimal */
+        max-width: 1050px;
+        /* Sedikit dilebarkan agar proporsi gambar optimal */
         display: flex;
-        min-height: 620px; /* Ditinggikan agar gambar vertikal lebih terlihat */
+        min-height: 620px;
+        /* Ditinggikan agar gambar vertikal lebih terlihat */
       }
 
       /* ================= SISI KIRI (DARK BRANDING) ================= */
       .login-branding {
         background-color: #1c1c24;
         width: 40%;
-        padding: 40px; /* Jarak presisi dari pojok container */
+        padding: 40px;
+        /* Jarak presisi dari pojok container */
         display: flex;
         flex-direction: column;
         justify-content: flex-start;
-        gap: 32px; /* Jarak seragam antara logo, gambar, dan teks */
+        gap: 32px;
+        /* Jarak seragam antara logo, gambar, dan teks */
         position: relative;
         overflow: hidden;
       }
@@ -74,13 +78,15 @@
       /* Pengaturan Logo di Pojok Kiri Atas */
       .brand-logo {
         max-width: 120px;
-        align-self: flex-start; /* Memastikan logo mentok ke kiri */
+        align-self: flex-start;
+        /* Memastikan logo mentok ke kiri */
         z-index: 1;
       }
 
       /* Pengaturan Foto Dummy Vertikal */
       .dummy-photo-wrapper {
-        flex-grow: 1; /* Membuat container otomatis memanjang secara vertikal */
+        flex-grow: 1;
+        /* Membuat container otomatis memanjang secara vertikal */
         width: 100%;
         min-height: 200px;
         border-radius: 16px;
@@ -93,7 +99,8 @@
       .dummy-photo-wrapper img {
         width: 100%;
         height: 100%;
-        object-fit: cover; /* Gambar tidak akan gepeng, otomatis terpotong proporsional */
+        object-fit: cover;
+        /* Gambar tidak akan gepeng, otomatis terpotong proporsional */
         display: block;
       }
 
@@ -206,6 +213,7 @@
       .form-check-input {
         cursor: pointer;
       }
+
       .form-check-input:checked {
         background-color: #1c1c24;
         border-color: #1c1c24;
@@ -264,19 +272,25 @@
           margin: 20px;
           min-height: auto;
         }
+
         .login-branding {
           width: 100%;
           padding: 40px 30px;
           align-items: center;
           text-align: center;
         }
+
         .brand-logo {
-          align-self: center; /* Di HP, logo ditengah */
+          align-self: center;
+          /* Di HP, logo ditengah */
         }
+
         .dummy-photo-wrapper {
-          min-height: 180px; /* Membatasi tinggi gambar di HP */
+          min-height: 180px;
+          /* Membatasi tinggi gambar di HP */
           flex-grow: 0;
         }
+
         .login-form-wrapper {
           width: 100%;
           padding: 40px 30px;
@@ -284,6 +298,7 @@
       }
     </style>
   </head>
+
   <body>
     <div class="login-container">
       <!-- Sisi Kiri (Branding) -->
