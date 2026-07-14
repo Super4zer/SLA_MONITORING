@@ -41,6 +41,16 @@ $router->get('/grub', function () {
         echo "Grub management page not found.";
     }
 });
+$router->get('/laporan', function () {
+    $html = __DIR__ . '/../public/views/laporan.php';
+    if (file_exists($html)) {
+        header('Content-Type: text/html');
+        require_once $html; 
+    } else {
+        http_response_code(404);
+        echo "Grub management page not found.";
+    }
+});
 
 $router->get('/laporan', function () {
     $html = __DIR__ . '/../public/views/laporan.php';

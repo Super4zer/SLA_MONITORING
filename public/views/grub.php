@@ -27,18 +27,15 @@
                     <span class="material-symbols-outlined fs-5">grid_view</span>
                     Dashboard
                 </a>
-                <a href="/grub.html" class="nav-link active">
+                <a href="/grub" class="nav-link active">
                     <span class="material-symbols-outlined fs-5">confirmation_number</span>
                     Tambah Grub
                 </a>
-                <a href="#" class="nav-link">
+                <a href="/laporan" class="nav-link">
                     <span class="material-symbols-outlined fs-5">bar_chart</span>
                     Laporan Kinerja
                 </a>
-                <a href="#" class="nav-link">
-                    <span class="material-symbols-outlined fs-5">support_agent</span>
-                    Tim Agen
-                </a>
+
             </nav>
 
             <div class="sidebar-footer">
@@ -187,16 +184,8 @@
             `<span class="material-symbols-outlined fs-6">schedule</span> ${time}`;
     }, 1000);
 
-    // 2. Simulasi Fungsionalitas Form & Tabel (Untuk dihubungkan dengan API Database)
-    /*
-    document.addEventListener('DOMContentLoaded', () => {
-      // Fetch data dari PHP Controller -> SlaMonitoringModel -> ts_group_whitelist
-      // fetch('/api/grub')
-      //   .then(res => res.json())
-      //   .then(data => renderTable(data));
-    });
-    */
+   
     </script>
 </body>
 
-</html>
+</html> 
