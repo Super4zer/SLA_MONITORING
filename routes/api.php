@@ -7,7 +7,7 @@ use App\Controllers\ActionController;
 /** @var \App\Routing\Router $router */
 
 // Frontend Dashboard
-$router->get('/', function() {
+$router->get('/', function () {
     $html = __DIR__ . '/../public/index.html';
     if (file_exists($html)) {
         header('Content-Type: text/html');
