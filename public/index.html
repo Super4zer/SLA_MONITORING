@@ -1,6 +1,5 @@
 <!doctype html>
 <html lang="id">
-
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -37,7 +36,6 @@
                     <span class="material-symbols-outlined fs-5">bar_chart</span>
                     Laporan Kinerja
                 </a>
-            
             </nav>
 
             <div class="sidebar-footer">
@@ -182,23 +180,21 @@
     // 2. Chart.js Inisialisasi (Lingkaran Sempurna)
     const ctx = document.getElementById("slaChart").getContext("2d");
     const slaChart = new Chart(ctx, {
-        type: "pie", // Diubah menjadi pie untuk lingkaran sempurna
+        type: "pie",
         data: {
             labels: ["Menunggu", "Terlambat", "Selesai"],
             datasets: [{
                 data: [0, 0, 0],
                 backgroundColor: ["#f59e0b", "#f43f5e", "#10b981"],
-                borderWidth: 0, // Menghilangkan border agar tampilan sangat bersih
-                hoverOffset: 6, // Memberikan sedikit efek "pop-out" saat di-hover
-            }, ],
+                borderWidth: 0,
+                hoverOffset: 6,
+            }],
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: {
-                    display: false
-                },
+                legend: { display: false },
                 tooltip: {
                     backgroundColor: "#1c1c24",
                     padding: 10,
@@ -211,12 +207,9 @@
 
     // 3. Sinkronisasi Observer
     const updateAnalytics = () => {
-        const w =
-            parseInt(document.getElementById("count-waiting").textContent) || 0;
-        const o =
-            parseInt(document.getElementById("count-overdue").textContent) || 0;
-        const c =
-            parseInt(document.getElementById("count-completed").textContent) || 0;
+        const w = parseInt(document.getElementById("count-waiting").textContent) || 0;
+        const o = parseInt(document.getElementById("count-overdue").textContent) || 0;
+        const c = parseInt(document.getElementById("count-completed").textContent) || 0;
 
         document.getElementById("stat-waiting").textContent = w;
         document.getElementById("stat-overdue").textContent = o;
@@ -240,5 +233,4 @@
     <script src="/js/api.js"></script>
     <script src="/js/app.js"></script>
 </body>
-
 </html>
