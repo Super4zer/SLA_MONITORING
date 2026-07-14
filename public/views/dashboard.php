@@ -345,7 +345,7 @@
             </div>
 
             <nav class="nav-sidebar flex-grow-1">
-                <a href="#" class="nav-link active">
+                <a href="/dashboard" class="nav-link active">
                     <span class="material-symbols-outlined fs-5">grid_view</span>
                     Dashboard
                 </a>
@@ -353,14 +353,11 @@
                     <span class="material-symbols-outlined fs-5">confirmation_number</span>
                     Tambah Grub
                 </a>
-                <a href="#" class="nav-link">
+                <a href="/laporan" class="nav-link">
                     <span class="material-symbols-outlined fs-5">bar_chart</span>
                     Laporan Kinerja
                 </a>
-                <a href="#" class="nav-link">
-                    <span class="material-symbols-outlined fs-5">support_agent</span>
-                    Tim Agen
-                </a>
+            
             </nav>
 
             <div class="sidebar-footer">
