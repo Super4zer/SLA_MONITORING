@@ -1,20 +1,4 @@
-:root {
-  --bg-color: #0f172a;
-  --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-  --glass-bg: rgba(30, 41, 59, 0.7);
-  --glass-border: rgba(255, 255, 255, 0.1);
-  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
-  
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
-  
-  --color-yellow: #fbbf24;
-  --color-red: #ef4444;
-  --color-green: #10b981;
-  
-  --card-radius: 16px;
-  --transition: all 0.3s ease;
-}
+
 
 * {
   box-sizing: border-box;
