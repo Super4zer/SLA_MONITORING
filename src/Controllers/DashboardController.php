@@ -13,30 +13,34 @@ class DashboardController
         $this->slaModel = new SlaMonitoringModel();
     }
 
-    public function getWaiting(): array
+    // Ubah semua method menjadi void dan lakukan echo langsung
+    public function getWaiting(): void
     {
+        header('Content-Type: application/json');
         $data = $this->slaModel->getWaiting(180);
-        return [
+        echo json_encode([
             'status' => 'success',
             'data' => $data
-        ];
+        ]);
     }
 
-    public function getOverdue(): array
+    public function getOverdue(): void
     {
+        header('Content-Type: application/json');
         $data = $this->slaModel->getOverdue(180);
-        return [
+        echo json_encode([
             'status' => 'success',
             'data' => $data
-        ];
+        ]);
     }
 
-    public function getCompleted(): array
+    public function getCompleted(): void
     {
+        header('Content-Type: application/json');
         $data = $this->slaModel->getCompleted(180);
-        return [
+        echo json_encode([
             'status' => 'success',
             'data' => $data
-        ];
+        ]);
     }
 }
