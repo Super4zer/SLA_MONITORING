@@ -43,4 +43,14 @@ class DashboardController
             'data' => $data
         ]);
     }
+
+    public function getOverdueResolved(): void
+    {
+        header('Content-Type: application/json');
+        $data = $this->slaModel->getOverdueResolved();
+        echo json_encode([
+            'status' => 'success',
+            'data' => $data
+        ]);
+    }
 }

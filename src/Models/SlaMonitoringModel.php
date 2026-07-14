@@ -114,20 +114,45 @@ class SlaMonitoringModel
 
     public function getCompleted(int $maxSeconds = 180): array
     {
+        // Hanya tiket yang BENAR-BENAR selesai tepat waktu (bukan overdue yang
+        // ditutup lewat penjelasan). Overdue yang diselesaikan by penjelasan
+        // punya card sendiri, lihat getOverdueResolved().
         $stmt = $this->db->prepare("
             SELECT s.*, g.group_name 
             FROM ts_sla_monitoring s
             LEFT JOIN ts_group_whitelist g ON s.group_id = g.group_id
             WHERE s.sla_seconds <= :max_seconds 
-               OR s.is_resolved_by_explanation = 1
+              AND s.is_resolved_by_explanation = 0
             ORDER BY s.time_received DESC
         ");
         $stmt->execute(['max_seconds' => $maxSeconds]);
         return $stmt->fetchAll();
     }
 
+    public function getOverdueResolved(): array
+    {
+        // Tiket yang sempat overdue (melewati batas SLA) tapi sudah
+        // ditindaklanjuti/ditutup lewat penjelasan. Statusnya tetap MERAH
+        // di kolom status_sla (karena memang telat, untuk keperluan audit di
+        // Laporan), hanya ditandai is_resolved_by_explanation = 1.
+        $stmt = $this->db->prepare("
+            SELECT s.*, g.group_name 
+            FROM ts_sla_monitoring s
+            LEFT JOIN ts_group_whitelist g ON s.group_id = g.group_id
+            WHERE s.is_resolved_by_explanation = 1
+            ORDER BY s.time_received DESC
+        ");
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
     public function resolveByExplanation(int $idMonitoring): bool
     {
+        // PENTING: status_sla TIDAK diubah jadi HIJAU. Tiket ini tetap MERAH
+        // (telat) karena memang melanggar SLA — hanya statusnya "sudah
+        // ditindaklanjuti/dijelaskan" lewat flag is_resolved_by_explanation.
+        // Ini memastikan riwayatnya tetap tercatat sebagai keterlambatan di
+        // Laporan/audit log, bukan disamarkan jadi seolah tepat waktu.
         $stmt = $this->db->prepare("
             UPDATE ts_sla_monitoring 
             SET is_resolved_by_explanation = 1,
@@ -135,7 +160,7 @@ class SlaMonitoringModel
             WHERE id_monitoring = :id
         ");
         return $stmt->execute([
-            'status_sla' => SlaStatus::HIJAU->value,
+            'status_sla' => SlaStatus::MERAH->value,
             'id' => $idMonitoring
         ]);
     }
@@ -162,14 +187,16 @@ class SlaMonitoringModel
                 SUM(CASE WHEN (time_responded IS NULL AND is_resolved_by_explanation = 0 
                          AND TIMESTAMPDIFF(SECOND, time_received, NOW()) > 180)
                          OR (sla_seconds > 180 AND is_resolved_by_explanation = 0) THEN 1 ELSE 0 END) AS overdue,
-                SUM(CASE WHEN sla_seconds <= 180 OR is_resolved_by_explanation = 1 THEN 1 ELSE 0 END) AS completed
+                SUM(CASE WHEN is_resolved_by_explanation = 1 THEN 1 ELSE 0 END) AS overdue_resolved,
+                SUM(CASE WHEN sla_seconds <= 180 AND is_resolved_by_explanation = 0 THEN 1 ELSE 0 END) AS completed
             FROM ts_sla_monitoring
         ");
         $row = $stmt->fetch();
         return [
-            'waiting'   => (int) ($row['waiting'] ?? 0),
-            'overdue'   => (int) ($row['overdue'] ?? 0),
-            'completed' => (int) ($row['completed'] ?? 0),
+            'waiting'          => (int) ($row['waiting'] ?? 0),
+            'overdue'          => (int) ($row['overdue'] ?? 0),
+            'overdue_resolved' => (int) ($row['overdue_resolved'] ?? 0),
+            'completed'        => (int) ($row['completed'] ?? 0),
         ];
     }
 

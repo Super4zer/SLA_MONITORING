@@ -5,10 +5,12 @@
   const clockEl = document.getElementById('live-clock');
   const listWaiting = document.getElementById('list-waiting');
   const listOverdue = document.getElementById('list-overdue');
+  const listOverdueResolved = document.getElementById('list-overdue-resolved');
   const listCompleted = document.getElementById('list-completed');
 
   const countWaiting = document.getElementById('count-waiting');
   const countOverdue = document.getElementById('count-overdue');
+  const countOverdueResolved = document.getElementById('count-overdue-resolved');
   const countCompleted = document.getElementById('count-completed');
 
   // Update Clock
@@ -65,13 +67,18 @@
     
     if (type === 'completed') {
       duration.innerHTML = `<span class="material-symbols-outlined" style="font-size: 14px">check_circle</span> SLA: ${ticket.sla_seconds}s`;
+    } else if (type === 'overdue-resolved') {
+      const slaLabel = ticket.sla_seconds != null ? `${ticket.sla_seconds}s` : formatElapsedTime(ticket.time_received);
+      duration.innerHTML = `<span class="material-symbols-outlined" style="font-size: 14px">task_alt</span> Telat, selesai by penjelasan &middot; ${slaLabel}`;
     } else {
       duration.innerHTML = `<span class="material-symbols-outlined" style="font-size: 14px">schedule</span> ${formatElapsedTime(ticket.time_received)}`;
     }
     
     footer.appendChild(duration);
 
-    if (type !== 'completed') {
+    // Kartu yang sudah closed (completed / overdue-resolved) tidak butuh
+    // tombol aksi lagi, karena SOP-nya sudah ditindaklanjuti.
+    if (type !== 'completed' && type !== 'overdue-resolved') {
       const actions = document.createElement('div');
       actions.className = 'ticket-actions';
       
@@ -143,9 +150,10 @@
     }
 
     try {
-      const [waitingRes, overdueRes, completedRes] = await Promise.all([
+      const [waitingRes, overdueRes, overdueResolvedRes, completedRes] = await Promise.all([
         window.SLA_API.getWaiting(),
         window.SLA_API.getOverdue(),
+        window.SLA_API.getOverdueResolved(),
         window.SLA_API.getCompleted()
       ]);
 
@@ -157,6 +165,11 @@
       if (overdueRes?.data) {
         if (countOverdue) countOverdue.textContent = overdueRes.data.length;
         renderList(listOverdue, overdueRes.data, 'overdue');
+      }
+
+      if (overdueResolvedRes?.data) {
+        if (countOverdueResolved) countOverdueResolved.textContent = overdueResolvedRes.data.length;
+        renderList(listOverdueResolved, overdueResolvedRes.data, 'overdue-resolved');
       }
 
       if (completedRes?.data) {

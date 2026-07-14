@@ -26,6 +26,7 @@ window.SLA_API = {
 
   getWaiting: () => fetchJSON(`${API_BASE}/waiting`),
   getOverdue: () => fetchJSON(`${API_BASE}/overdue`),
+  getOverdueResolved: () => fetchJSON(`${API_BASE}/overdue-resolved`),
   getCompleted: () => fetchJSON(`${API_BASE}/completed`),
 
   resolve: (id) =>
