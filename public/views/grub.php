@@ -183,9 +183,7 @@
         document.getElementById("live-clock").innerHTML =
             `<span class="material-symbols-outlined fs-6">schedule</span> ${time}`;
     }, 1000);
-
-   
     </script>
 </body>
 
-</html> 
+</html>
