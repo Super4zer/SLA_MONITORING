@@ -112,7 +112,7 @@
                 </div>
 
                 <div class="row g-4">
-                    <div class="col-lg-4">
+                    <div class="col-xl-3 col-lg-6">
                         <div class="dashboard-card">
                             <div class="d-flex justify-content-between align-items-center">
                                 <span class="fw-bold text-dark fs-6">
@@ -128,7 +128,7 @@
                         </div>
                     </div>
 
-                    <div class="col-lg-4">
+                    <div class="col-xl-3 col-lg-6">
                         <div class="dashboard-card">
                             <div class="d-flex justify-content-between align-items-center">
                                 <span class="fw-bold text-dark fs-6">
@@ -144,7 +144,23 @@
                         </div>
                     </div>
 
-                    <div class="col-lg-4">
+                    <div class="col-xl-3 col-lg-6">
+                        <div class="dashboard-card">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="fw-bold text-dark fs-6">
+                                    <span class="dot-indicator bg-overdue-resolved"></span>
+                                    Overdue, Terselesaikan
+                                </span>
+                                <span class="fw-bold text-overdue-resolved small" id="count-overdue-resolved">0</span>
+                            </div>
+
+                            <div class="list-container-scroll" id="list-overdue-resolved">
+                                <!-- Cards will be injected here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-xl-3 col-lg-6">
                         <div class="dashboard-card">
                             <div class="d-flex justify-content-between align-items-center">
                                 <span class="fw-bold text-dark fs-6">
