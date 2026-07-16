@@ -27,10 +27,22 @@ date_default_timezone_set(Env::get('TIMEZONE', 'Asia/Jakarta'));
 // Initialize Router
 $router = new Router();
 
+// Log requests for debugging
+file_put_contents(__DIR__ . '/../logs/request.log', date('[Y-m-d H:i:s] ') . $_SERVER['REQUEST_METHOD'] . ' ' . $_SERVER['REQUEST_URI'] . PHP_EOL, FILE_APPEND);
+
 // Load routes
 require_once __DIR__ . '/../routes/api.php';
 
 // Dispatch request
 $method = $_SERVER['REQUEST_METHOD'];
 $uri = $_SERVER['REQUEST_URI'];
+
+// Fix for some server configurations where REQUEST_URI might include query string or subfolder
+if (false !== $pos = strpos($uri, '?')) {
+    $uri = substr($uri, 0, $pos);
+}
+
+// If the app is running in a subfolder, we should strip the subfolder path.
+// For now, we assume it's at the root of the domain.
+
 $router->dispatch($method, $uri);
