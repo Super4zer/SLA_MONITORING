@@ -25,35 +25,44 @@ class GroupController
         exit;
     }
 
-    // API POST: Tambah data
-    public function storeGroup(): void
+   public function storeGroup(): void
     {
         header('Content-Type: application/json');
         
-        // Ambil payload JSON dari JS
-        $input = json_decode(file_get_contents('php://input'), true);
-        
-        $groupId = $input['group_id'] ?? '';
-        $groupName = $input['group_name'] ?? '';
+        // BUNGKUS DENGAN TRY-CATCH UNTUK MENANGKAP FATAL ERROR
+        try {
+            $input = json_decode(file_get_contents('php://input'), true);
+            
+            $groupId = $input['group_id'] ?? '';
+            $groupName = $input['group_name'] ?? '';
 
-        if (empty($groupId) || empty($groupName)) {
-            http_response_code(400);
-            echo json_encode(['status' => 'error', 'message' => 'ID Grub dan Nama Grub wajib diisi']);
-            return;
-        }
+            if (empty($groupId) || empty($groupName)) {
+                http_response_code(400);
+                echo json_encode(['status' => 'error', 'message' => 'ID Grub dan Nama Grub wajib diisi']);
+                return;
+            }
 
-        $success = $this->groupModel->createGroup($groupId, $groupName);
+            // Memanggil model
+            $success = $this->groupModel->createGroup($groupId, $groupName);
 
-        if ($success) {
-            echo json_encode(['status' => 'success', 'message' => 'Grub berhasil ditambahkan']);
-        } else {
+            if ($success) {
+                echo json_encode(['status' => 'success', 'message' => 'Grub berhasil ditambahkan']);
+            } else {
+                http_response_code(500);
+                echo json_encode(['status' => 'error', 'message' => 'Gagal mengeksekusi query database']);
+            }
+
+        } catch (\Throwable $th) {
+            // JIKA TERJADI FATAL ERROR / PDO EXCEPTION, TANGKAP DI SINI!
             http_response_code(500);
-            echo json_encode(['status' => 'error', 'message' => 'Gagal menyimpan ke database']);
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'SYSTEM ERROR: ' . $th->getMessage(), // Menampilkan pesan asli PHP
+                'file' => basename($th->getFile()) . ' (Baris ' . $th->getLine() . ')'
+            ]);
         }
         exit;
     }
-    // Simpan fungsi ini di dalam class GroupController
-
 public function updateGroup(): void
 {
     header('Content-Type: application/json');
