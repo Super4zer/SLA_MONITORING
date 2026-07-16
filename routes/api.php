@@ -4,6 +4,7 @@ use App\Controllers\WebhookController;
 use App\Controllers\DashboardController;
 use App\Controllers\ActionController;
 use App\Controllers\GroupController;
+use App\Controllers\StaffController;
 
 /** @var \App\Routing\Router $router */
 
@@ -53,6 +54,18 @@ $router->get('/laporan', function () {
     }
 });
 
+// Frontend: Halaman Manajemen Agent CS (/agen-cs)
+$router->get('/agen-cs', function () {
+    $html = __DIR__ . '/../public/views/agen-cs.php';
+    if (file_exists($html)) {
+        header('Content-Type: text/html');
+        require_once $html;
+    } else {
+        http_response_code(404);
+        echo "Agent CS management page not found.";
+    }
+});
+
 $router->get('/laporan', function () {
     $html = __DIR__ . '/../public/views/laporan.php';
     if (file_exists($html)) {
@@ -85,3 +98,10 @@ $router->get('/api/groups', [GroupController::class, 'getGroups']);
 $router->post('/api/groups', [GroupController::class, 'storeGroup']);
 $router->post('/api/groups/update', [GroupController::class, 'updateGroup']);
 $router->post('/api/groups/delete', [GroupController::class, 'deleteGroup']);
+
+// API Staff CS Whitelist (Agent CS)
+$router->get('/api/staff', [StaffController::class, 'getStaff']);
+$router->post('/api/staff', [StaffController::class, 'storeStaff']);
+$router->post('/api/staff/update', [StaffController::class, 'updateStaff']);
+$router->post('/api/staff/toggle', [StaffController::class, 'toggleStaff']);
+$router->post('/api/staff/delete', [StaffController::class, 'deleteStaff']);

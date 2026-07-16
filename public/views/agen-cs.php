@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Manajemen Grub - SLA Monitoring Command Center</title>
+    <title>Agent CS - SLA Monitoring Command Center</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -13,7 +13,6 @@
     <link rel="stylesheet" href="/css/grub.css">
 
     <style>
-    /* Custom Notification Panel */
     .cmd-notification {
         position: fixed;
         top: 30px;
@@ -108,6 +107,57 @@
         color: #8b8b99;
         font-weight: 500;
     }
+
+    /* Status Pill (Aktif / Nonaktif) */
+    .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .status-pill.active {
+        background-color: rgba(204, 255, 0, 0.12);
+        color: #7a9600;
+    }
+
+    .status-pill.inactive {
+        background-color: rgba(139, 139, 153, 0.15);
+        color: #8b8b99;
+    }
+
+    .status-pill .dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background-color: currentColor;
+    }
+
+    .action-btn.toggle {
+        color: #3b82f6;
+    }
+
+    .action-btn.toggle:hover {
+        background-color: rgba(59, 130, 246, 0.1);
+    }
+
+    /* Avatar inisial pada tabel staff */
+    .staff-avatar {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        background-color: #1c1c24;
+        color: #ccff00;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 13px;
+        flex-shrink: 0;
+    }
     </style>
 </head>
 
@@ -120,26 +170,27 @@
         </div>
     </div>
 
-    <div class="modal fade" id="editGrubModal" tabindex="-1" aria-hidden="true">
+    <!-- Modal Edit Staff -->
+    <div class="modal fade" id="editStaffModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content modal-cmd-content">
                 <div class="modal-header modal-cmd-header">
                     <h5 class="modal-title fw-bold d-flex align-items-center gap-2">
-                        <span class="material-symbols-outlined text-warning">edit_square</span> Edit Data Grub
+                        <span class="material-symbols-outlined text-warning">edit_square</span> Edit Data Agent CS
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
                         aria-label="Close"></button>
                 </div>
-                <form id="editGrubForm">
+                <form id="editStaffForm">
                     <div class="modal-body p-4">
-                        <input type="hidden" id="editId" />
+                        <input type="hidden" id="editStaffId" />
                         <div class="mb-3">
-                            <label class="form-label" for="editGrubId">ID Grub</label>
-                            <input type="text" class="form-control" id="editGrubId" required />
+                            <label class="form-label" for="editStaffPhone">Nomor HP (WhatsApp)</label>
+                            <input type="text" class="form-control" id="editStaffPhone" required />
                         </div>
                         <div class="mb-3">
-                            <label class="form-label" for="editGrubName">Nama Grub</label>
-                            <input type="text" class="form-control" id="editGrubName" required />
+                            <label class="form-label" for="editStaffName">Nama Agent CS</label>
+                            <input type="text" class="form-control" id="editStaffName" required />
                         </div>
                     </div>
                     <div class="modal-footer modal-cmd-footer">
@@ -154,18 +205,19 @@
         </div>
     </div>
 
-    <div class="modal fade" id="deleteGrubModal" tabindex="-1" aria-hidden="true">
+    <!-- Modal Konfirmasi Hapus -->
+    <div class="modal fade" id="deleteStaffModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-sm">
             <div class="modal-content modal-cmd-content">
                 <div class="modal-body text-center p-4">
                     <span class="material-symbols-outlined text-danger mb-2" style="font-size: 48px;">warning</span>
-                    <h6 class="fw-bold text-white mb-2">Hapus Data Grub?</h6>
+                    <h6 class="fw-bold text-white mb-2">Hapus Agent CS?</h6>
                     <p class="text-muted small mb-4">Tindakan ini tidak dapat dibatalkan secara permanen.</p>
-                    <input type="hidden" id="deleteId" />
+                    <input type="hidden" id="deleteStaffId" />
                     <div class="d-flex gap-2 justify-content-center">
                         <button type="button" class="btn btn-secondary btn-sm px-3" style="border-radius: 6px;"
                             data-bs-dismiss="modal">Batal</button>
-                        <button type="button" id="btnConfirmDelete" class="btn btn-danger btn-sm px-3"
+                        <button type="button" id="btnConfirmDeleteStaff" class="btn btn-danger btn-sm px-3"
                             style="border-radius: 6px; background-color: #f43f5e;">Ya, Hapus</button>
                     </div>
                 </div>
@@ -186,11 +238,11 @@
                     <span class="material-symbols-outlined fs-5">grid_view</span>
                     Dashboard
                 </a>
-                <a href="/grub" class="nav-link active">
+                <a href="/grub" class="nav-link">
                     <span class="material-symbols-outlined fs-5">confirmation_number</span>
                     Tambah Grub
                 </a>
-                  <a href="/agen-cs" class="nav-link">
+                <a href="/agen-cs" class="nav-link active">
                     <span class="material-symbols-outlined fs-5">support_agent</span>
                     Agent CS
                 </a>
@@ -217,7 +269,7 @@
         <div class="main-wrapper">
             <header class="topbar">
                 <div>
-                    <h4 class="m-0 fw-bold text-dark">Manajemen Grub Whitelist</h4>
+                    <h4 class="m-0 fw-bold text-dark">Manajemen Agent CS</h4>
                 </div>
                 <div class="tabular-clock" id="live-clock">
                     <span class="material-symbols-outlined fs-6">schedule</span>
@@ -230,27 +282,23 @@
                     <div class="col-lg-4">
                         <div class="dashboard-card">
                             <div class="card-title-custom">
-                                <a href="/grub" class="nav-link">
-                                    <span class="material-symbols-outlined fs-5">confirmation_number</span>
-                                    Tambah Grub
-                                </a>
+                                <span class="material-symbols-outlined fs-5">support_agent</span>
+                                Tambah Agent CS
                             </div>
 
-                            <form id="grubForm">
-                                <input type="hidden" id="formAction" value="create" />
-
+                            <form id="staffForm">
                                 <div class="mb-4">
-                                    <label class="form-label" for="grubId">ID Grub</label>
-                                    <input type="text" class="form-control" id="grubId"
-                                        placeholder="Contoh: 12036304XXXXX@g.us" required />
-                                    <small class="text-muted mt-1 d-block" style="font-size: 12px">Masukkan ID unik grup
-                                        WhatsApp/Telegram.</small>
+                                    <label class="form-label" for="staffPhone">Nomor HP (WhatsApp)</label>
+                                    <input type="text" class="form-control" id="staffPhone"
+                                        placeholder="Contoh: 6281234567890" required />
+                                    <small class="text-muted mt-1 d-block" style="font-size: 12px">Gunakan format
+                                        62xxxxxxxxxx, tanpa spasi atau tanda +.</small>
                                 </div>
 
                                 <div class="mb-4">
-                                    <label class="form-label" for="grubName">Nama Grub</label>
-                                    <input type="text" class="form-control" id="grubName"
-                                        placeholder="Contoh: Tim IT Support" required />
+                                    <label class="form-label" for="staffName">Nama Agent CS</label>
+                                    <input type="text" class="form-control" id="staffName"
+                                        placeholder="Contoh: CS Ridho" required />
                                 </div>
 
                                 <div class="d-flex gap-2 mt-2">
@@ -258,7 +306,7 @@
                                         <span class="material-symbols-outlined fs-6">save</span>
                                         Simpan Data
                                     </button>
-                                    <button type="reset" class="btn-light-custom" id="btnReset">
+                                    <button type="reset" class="btn-light-custom" id="btnResetStaff">
                                         Batal
                                     </button>
                                 </div>
@@ -271,11 +319,11 @@
                             <div class="d-flex justify-content-between align-items-center mb-4">
                                 <div class="card-title-custom mb-0">
                                     <span class="material-symbols-outlined">list_alt</span>
-                                    Daftar Grub Terdaftar
+                                    Daftar Agent CS Terdaftar
                                 </div>
                                 <div class="position-relative">
-                                    <input type="text" class="form-control form-control-sm ps-4"
-                                        placeholder="Cari grub..." style="width: 250px; border-radius: 8px" />
+                                    <input type="text" id="staffSearchInput" class="form-control form-control-sm ps-4"
+                                        placeholder="Cari nama atau nomor HP..." style="width: 250px; border-radius: 8px" />
                                     <span class="material-symbols-outlined position-absolute" style="
                         top: 8px;
                         left: 10px;
@@ -290,12 +338,13 @@
                                     <thead>
                                         <tr>
                                             <th width="5%">No</th>
-                                            <th width="35%">ID Grub</th>
-                                            <th width="40%">Nama Grub</th>
+                                            <th width="35%">Agent CS</th>
+                                            <th width="25%">Nomor HP</th>
+                                            <th width="15%">Status</th>
                                             <th width="20%" class="text-center">Aksi</th>
                                         </tr>
                                     </thead>
-                                    <tbody id="grubTableBody">
+                                    <tbody id="staffTableBody">
                                     </tbody>
                                 </table>
                             </div>
@@ -350,58 +399,107 @@
         }, 3500);
     }
 
-    // 3. Global State untuk Cache Data Tabel
-    const API_GROUP_URL = '/api/groups';
-    const tableBody = document.getElementById('grubTableBody');
-    let localGroupsCache = []; // Menyimpan data sementara untuk kemudahan Edit
+    function escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str ?? '';
+        return div.innerHTML;
+    }
+
+    function getInitials(name) {
+        if (!name) return '?';
+        const parts = name.trim().split(/\s+/);
+        return (parts[0]?.[0] || '') + (parts.length > 1 ? parts[parts.length - 1][0] : '');
+    }
+
+    // 3. Global State
+    const API_STAFF_URL = '/api/staff';
+    const tableBody = document.getElementById('staffTableBody');
+    let localStaffCache = []; // cache lokal untuk edit/delete tanpa fetch ulang
+
+    function renderStaffRows(staffList) {
+        if (!staffList || staffList.length === 0) {
+            tableBody.innerHTML =
+                '<tr><td colspan="5" class="text-center text-muted">Tidak ada agent CS yang cocok</td></tr>';
+            return;
+        }
+
+        tableBody.innerHTML = staffList.map((staff, index) => {
+            const isActive = Number(staff.is_active) === 1;
+            return `
+                <tr>
+                    <td class="fw-medium text-muted">${index + 1}</td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="staff-avatar">${escapeHtml(getInitials(staff.staff_name)).toUpperCase()}</span>
+                            <span class="fw-medium">${escapeHtml(staff.staff_name)}</span>
+                        </div>
+                    </td>
+                    <td class="font-monospace text-secondary">${escapeHtml(staff.phone_number)}</td>
+                    <td>
+                        <span class="status-pill ${isActive ? 'active' : 'inactive'}">
+                            <span class="dot"></span> ${isActive ? 'Aktif' : 'Nonaktif'}
+                        </span>
+                    </td>
+                    <td class="text-center">
+                        <button class="action-btn toggle" title="${isActive ? 'Nonaktifkan' : 'Aktifkan'}" onclick="toggleStaffStatus(${staff.id}, ${isActive ? 0 : 1})">
+                            <span class="material-symbols-outlined">${isActive ? 'toggle_on' : 'toggle_off'}</span>
+                        </button>
+                        <button class="action-btn edit" title="Edit Data" onclick="openEditStaffModal(${staff.id})">
+                            <span class="material-symbols-outlined">edit_square</span>
+                        </button>
+                        <button class="action-btn delete" title="Hapus Data" onclick="openDeleteStaffModal(${staff.id})">
+                            <span class="material-symbols-outlined">delete</span>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
 
     // Load Data
-    async function loadGroups() {
-        tableBody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Memuat data...</td></tr>';
+    async function loadStaff(keyword = '') {
+        tableBody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Memuat data...</td></tr>';
         try {
-            const response = await fetch(API_GROUP_URL);
+            const url = keyword ? `${API_STAFF_URL}?q=${encodeURIComponent(keyword)}` : API_STAFF_URL;
+            const response = await fetch(url);
             const result = await response.json();
 
-            if (result.status === 'success' && result.data.length > 0) {
-                localGroupsCache = result.data; // Simpan di cache lokal
-                tableBody.innerHTML = result.data.map((group, index) => `
-                    <tr>
-                        <td class="fw-medium text-muted">${index + 1}</td>
-                        <td class="font-monospace text-secondary">${group.group_id}</td>
-                        <td class="fw-medium">${group.group_name}</td>
-                        <td class="text-center">
-                            <button class="action-btn edit" title="Edit Data" onclick="openEditModal(${group.id})">
-                                <span class="material-symbols-outlined">edit_square</span>
-                            </button>
-                            <button class="action-btn delete" title="Hapus Data" onclick="openDeleteModal(${group.id})">
-                                <span class="material-symbols-outlined">delete</span>
-                            </button>
-                        </td>
-                    </tr>
-                `).join('');
+            if (result.status === 'success') {
+                if (!keyword) {
+                    localStaffCache = result.data; // simpan cache lengkap hanya saat tanpa filter
+                }
+                renderStaffRows(result.data);
             } else {
                 tableBody.innerHTML =
-                    '<tr><td colspan="4" class="text-center text-muted">Belum ada grup yang terdaftar</td></tr>';
+                    '<tr><td colspan="5" class="text-center text-danger">Gagal memuat data</td></tr>';
             }
         } catch (error) {
             tableBody.innerHTML =
-                '<tr><td colspan="4" class="text-center text-danger">Gagal terhubung ke server</td></tr>';
+                '<tr><td colspan="5" class="text-center text-danger">Gagal terhubung ke server</td></tr>';
         }
     }
 
-    // 4. Tambah Data (Create)
-    document.getElementById('grubForm').addEventListener('submit', async (e) => {
+    // 4. Fitur Pencarian Agent CS (client-side, langsung ke API agar konsisten dgn data terbaru)
+    let searchDebounce;
+    document.getElementById('staffSearchInput').addEventListener('input', (e) => {
+        clearTimeout(searchDebounce);
+        const keyword = e.target.value.trim();
+        searchDebounce = setTimeout(() => loadStaff(keyword), 300);
+    });
+
+    // 5. Tambah Data (Create)
+    document.getElementById('staffForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const btnSubmit = e.target.querySelector('button[type="submit"]');
         btnSubmit.disabled = true;
 
         const payload = {
-            group_id: document.getElementById('grubId').value,
-            group_name: document.getElementById('grubName').value
+            phone_number: document.getElementById('staffPhone').value,
+            staff_name: document.getElementById('staffName').value
         };
 
         try {
-            const response = await fetch(API_GROUP_URL, {
+            const response = await fetch(API_STAFF_URL, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -411,10 +509,10 @@
             const result = await response.json();
 
             if (result.status === 'success') {
-                showCmdNotification('Registrasi Sukses', 'Data grup telah ditambahkan ke database.',
-                    'success');
-                document.getElementById('grubForm').reset();
-                loadGroups();
+                showCmdNotification('Registrasi Sukses', 'Agent CS telah ditambahkan ke database.', 'success');
+                document.getElementById('staffForm').reset();
+                document.getElementById('staffSearchInput').value = '';
+                loadStaff();
             } else {
                 showCmdNotification('Gagal Menyimpan', result.message, 'error');
             }
@@ -422,37 +520,35 @@
             showCmdNotification('Koneksi Terputus', 'Gagal menghubungi server.', 'error');
         } finally {
             btnSubmit.disabled = false;
-            btnSubmit.innerHTML = `<span class="material-symbols-outlined fs-6">save</span> Simpan Data`;
         }
     });
 
     // ==========================================
-    // 5. LOGIKA TOMBOL EDIT (FORM MODAL & PUT FETCH)
+    // 6. LOGIKA TOMBOL EDIT
     // ==========================================
-    const bsEditModal = new bootstrap.Modal(document.getElementById('editGrubModal'));
+    const bsEditStaffModal = new bootstrap.Modal(document.getElementById('editStaffModal'));
 
-    function openEditModal(id) {
-        // Cari objek grup di data lokal cache berdasarkan id database
-        const targetGroup = localGroupsCache.find(g => g.id == id);
-        if (targetGroup) {
-            document.getElementById('editId').value = targetGroup.id;
-            document.getElementById('editGrubId').value = targetGroup.group_id;
-            document.getElementById('editGrubName').value = targetGroup.group_name;
-            bsEditModal.show();
+    function openEditStaffModal(id) {
+        const target = localStaffCache.find(s => s.id == id);
+        if (target) {
+            document.getElementById('editStaffId').value = target.id;
+            document.getElementById('editStaffPhone').value = target.phone_number;
+            document.getElementById('editStaffName').value = target.staff_name;
+            bsEditStaffModal.show();
         }
     }
 
-    document.getElementById('editGrubForm').addEventListener('submit', async (e) => {
+    document.getElementById('editStaffForm').addEventListener('submit', async (e) => {
         e.preventDefault();
-        const id = document.getElementById('editId').value;
+        const id = document.getElementById('editStaffId').value;
         const payload = {
             id: id,
-            group_id: document.getElementById('editGrubId').value,
-            group_name: document.getElementById('editGrubName').value
+            phone_number: document.getElementById('editStaffPhone').value,
+            staff_name: document.getElementById('editStaffName').value
         };
 
         try {
-            const response = await fetch('/api/groups/update', {
+            const response = await fetch('/api/staff/update', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -462,9 +558,9 @@
             const result = await response.json();
 
             if (result.status === 'success') {
-                showCmdNotification('Update Sukses', 'Perubahan data grup berhasil diperbarui.', 'success');
-                bsEditModal.hide();
-                loadGroups();
+                showCmdNotification('Update Sukses', 'Data agent CS berhasil diperbarui.', 'success');
+                bsEditStaffModal.hide();
+                loadStaff(document.getElementById('staffSearchInput').value.trim());
             } else {
                 showCmdNotification('Update Gagal', result.message, 'error');
             }
@@ -474,20 +570,48 @@
     });
 
     // ==========================================
-    // 6. LOGIKA TOMBOL DELETE (CONFIRM MODAL & POST FETCH)
+    // 7. LOGIKA TOGGLE AKTIF / NONAKTIF
     // ==========================================
-    const bsDeleteModal = new bootstrap.Modal(document.getElementById('deleteGrubModal'));
+    async function toggleStaffStatus(id, nextState) {
+        try {
+            const response = await fetch('/api/staff/toggle', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    id: id,
+                    is_active: nextState
+                })
+            });
+            const result = await response.json();
 
-    function openDeleteModal(id) {
-        document.getElementById('deleteId').value = id;
-        bsDeleteModal.show();
+            if (result.status === 'success') {
+                showCmdNotification('Status Diperbarui', result.message, 'success');
+                loadStaff(document.getElementById('staffSearchInput').value.trim());
+            } else {
+                showCmdNotification('Gagal Mengubah Status', result.message, 'error');
+            }
+        } catch (error) {
+            showCmdNotification('Error Jaringan', 'Gagal memproses perubahan status.', 'error');
+        }
     }
 
-    document.getElementById('btnConfirmDelete').addEventListener('click', async () => {
-        const id = document.getElementById('deleteId').value;
+    // ==========================================
+    // 8. LOGIKA TOMBOL DELETE
+    // ==========================================
+    const bsDeleteStaffModal = new bootstrap.Modal(document.getElementById('deleteStaffModal'));
+
+    function openDeleteStaffModal(id) {
+        document.getElementById('deleteStaffId').value = id;
+        bsDeleteStaffModal.show();
+    }
+
+    document.getElementById('btnConfirmDeleteStaff').addEventListener('click', async () => {
+        const id = document.getElementById('deleteStaffId').value;
 
         try {
-            const response = await fetch('/api/groups/delete', {
+            const response = await fetch('/api/staff/delete', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -499,9 +623,9 @@
             const result = await response.json();
 
             if (result.status === 'success') {
-                showCmdNotification('Data Dihapus', 'Grup berhasil dihapus dari whitelist.', 'success');
-                bsDeleteModal.hide();
-                loadGroups();
+                showCmdNotification('Data Dihapus', 'Agent CS berhasil dihapus dari whitelist.', 'success');
+                bsDeleteStaffModal.hide();
+                loadStaff(document.getElementById('staffSearchInput').value.trim());
             } else {
                 showCmdNotification('Gagal Hapus', result.message, 'error');
             }
@@ -511,7 +635,7 @@
     });
 
     // Jalankan pertama kali halaman dibuka
-    document.addEventListener('DOMContentLoaded', loadGroups);
+    document.addEventListener('DOMContentLoaded', () => loadStaff());
     </script>
 </body>
 

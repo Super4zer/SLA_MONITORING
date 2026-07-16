@@ -170,6 +170,10 @@ if (isset($_GET['action'])) {
                     <span class="material-symbols-outlined fs-5">confirmation_number</span>
                     Tambah Grub
                 </a>
+                  <a href="/agen-cs" class="nav-link">
+                    <span class="material-symbols-outlined fs-5">support_agent</span>
+                    Agent CS
+                </a>
                 <a href="/laporan" class="nav-link active">
                     <span class="material-symbols-outlined fs-5">bar_chart</span>
                     Laporan Kinerja
