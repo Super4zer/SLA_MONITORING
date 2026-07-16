@@ -37,7 +37,7 @@
                     <span class="material-symbols-outlined fs-5">bar_chart</span>
                     Laporan Kinerja
                 </a>
-            
+
             </nav>
 
             <div class="sidebar-footer">
@@ -112,12 +112,12 @@
                 </div>
 
                 <div class="row g-4">
-                    <div class="col-xl-3 col-lg-6">
+                    <div class="col-xl-6 col-lg-6">
                         <div class="dashboard-card">
                             <div class="d-flex justify-content-between align-items-center">
                                 <span class="fw-bold text-dark fs-6">
                                     <span class="dot-indicator bg-waiting"></span> Belum
-                                    direspon
+                                    Direspon
                                 </span>
                                 <span class="fw-bold text-waiting small" id="count-waiting">0</span>
                             </div>
@@ -128,39 +128,7 @@
                         </div>
                     </div>
 
-                    <div class="col-xl-3 col-lg-6">
-                        <div class="dashboard-card">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <span class="fw-bold text-dark fs-6">
-                                    <span class="dot-indicator bg-overdue"></span> Melewati
-                                    Batas 3 Menit
-                                </span>
-                                <span class="fw-bold text-overdue small" id="count-overdue">0</span>
-                            </div>
-
-                            <div class="list-container-scroll" id="list-overdue">
-                                <!-- Cards will be injected here -->
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-xl-3 col-lg-6">
-                        <div class="dashboard-card">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <span class="fw-bold text-dark fs-6">
-                                    <span class="dot-indicator bg-overdue-resolved"></span>
-                                    Overdue, Terselesaikan
-                                </span>
-                                <span class="fw-bold text-overdue-resolved small" id="count-overdue-resolved">0</span>
-                            </div>
-
-                            <div class="list-container-scroll" id="list-overdue-resolved">
-                                <!-- Cards will be injected here -->
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-xl-3 col-lg-6">
+                    <div class="col-xl-6 col-lg-6">
                         <div class="dashboard-card">
                             <div class="d-flex justify-content-between align-items-center">
                                 <span class="fw-bold text-dark fs-6">
@@ -180,77 +148,96 @@
         </div>
     </div>
 
+    <!-- Modal Detail balasan CS (vanilla, tidak butuh Bootstrap JS) -->
+    <div id="detail-modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(15,15,20,0.55); z-index:1050; align-items:center; justify-content:center;">
+        <div style="background:#fff; border-radius:14px; width:100%; max-width:480px; margin:16px; padding:24px; box-shadow:0 20px 50px rgba(0,0,0,0.25);">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="m-0 fw-bold text-dark">Detail Komplain</h5>
+                <button onclick="hideDetailModal()" style="border:none; background:none; font-size:20px; line-height:1; cursor:pointer;">&times;</button>
+            </div>
+
+            <div class="mb-3">
+                <div class="text-muted small mb-1">Client</div>
+                <div class="fw-semibold" id="detail-client">-</div>
+                <div class="text-muted small" id="detail-received">-</div>
+            </div>
+
+            <div class="mb-3">
+                <div class="text-muted small mb-1">Isi Komplain</div>
+                <div id="detail-message" style="white-space:pre-wrap;">-</div>
+            </div>
+
+            <hr />
+
+            <div class="mb-3">
+                <div class="text-muted small mb-1">Dijawab oleh</div>
+                <div class="fw-semibold" id="detail-responder">-</div>
+                <div class="text-muted small" id="detail-responded-time">-</div>
+            </div>
+
+            <div class="mb-3">
+                <div class="text-muted small mb-1">Isi Balasan CS</div>
+                <div id="detail-response" style="white-space:pre-wrap;">-</div>
+            </div>
+
+            <div>
+                <div class="text-muted small mb-1">Durasi SLA</div>
+                <div class="fw-bold" id="detail-duration">-</div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.3/purify.min.js"></script>
 
     <script>
-    // 1. Clock
-    if (!document.getElementById("live-clock").textContent.includes(":")) {
-        setInterval(() => {
-            const now = new Date();
-            const time = now.toLocaleTimeString("id-ID", {
-                hour12: false
-            });
-            document.getElementById("live-clock").innerHTML =
-                `<span class="material-symbols-outlined fs-6">schedule</span> ${time}`;
-        }, 1000);
-    }
+        // 1. Clock (backup, app.js juga mengelola ini)
+        if (!document.getElementById("live-clock").textContent.includes(":")) {
+            setInterval(() => {
+                const now = new Date();
+                const time = now.toLocaleTimeString("id-ID", {
+                    hour12: false
+                });
+                document.getElementById("live-clock").innerHTML =
+                    `<span class="material-symbols-outlined fs-6">schedule</span> ${time}`;
+            }, 1000);
+        }
 
-    // 2. Chart.js Inisialisasi (Lingkaran Sempurna)
-    const ctx = document.getElementById("slaChart").getContext("2d");
-    const slaChart = new Chart(ctx, {
-        type: "pie", // Diubah menjadi pie untuk lingkaran sempurna
-        data: {
-            labels: ["Menunggu", "Terlambat", "Selesai"],
-            datasets: [{
-                data: [0, 0, 0],
-                backgroundColor: ["#f59e0b", "#f43f5e", "#10b981"],
-                borderWidth: 0, // Menghilangkan border agar tampilan sangat bersih
-                hoverOffset: 6, // Memberikan sedikit efek "pop-out" saat di-hover
-            }, ],
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
-                },
-                tooltip: {
-                    backgroundColor: "#1c1c24",
-                    padding: 10,
-                    cornerRadius: 8,
-                    displayColors: false,
+        // 2. Chart.js Inisialisasi (Lingkaran Sempurna)
+        const ctx = document.getElementById("slaChart").getContext("2d");
+        const slaChart = new Chart(ctx, {
+            type: "pie",
+            data: {
+                labels: ["Menunggu", "Terlambat", "Selesai"],
+                datasets: [{
+                    data: [0, 0, 0],
+                    backgroundColor: ["#10b981", "#f43f5e", "#10b981"],
+                    borderWidth: 0,
+                    hoverOffset: 6,
+                }, ],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: "#1c1c24",
+                        padding: 10,
+                        cornerRadius: 8,
+                        displayColors: false,
+                    },
                 },
             },
-        },
-    });
+        });
 
-    // 3. Sinkronisasi Observer
-    const updateAnalytics = () => {
-        const w =
-            parseInt(document.getElementById("count-waiting").textContent) || 0;
-        const o =
-            parseInt(document.getElementById("count-overdue").textContent) || 0;
-        const c =
-            parseInt(document.getElementById("count-completed").textContent) || 0;
-
-        document.getElementById("stat-waiting").textContent = w;
-        document.getElementById("stat-overdue").textContent = o;
-        document.getElementById("stat-completed").textContent = c;
-
-        slaChart.data.datasets[0].data = [w, o, c];
-        slaChart.update();
-    };
-
-    const observer = new MutationObserver(updateAnalytics);
-    const config = {
-        characterData: true,
-        childList: true,
-        subtree: true
-    };
-    observer.observe(document.getElementById("count-waiting"), config);
-    observer.observe(document.getElementById("count-overdue"), config);
-    observer.observe(document.getElementById("count-completed"), config);
+        // 3. Dipanggil langsung dari app.js tiap kali data / timer berubah,
+        // jadi tidak perlu lagi MutationObserver.
+        window.updateSlaChart = function(onTime, late, completed) {
+            slaChart.data.datasets[0].data = [onTime, late, completed];
+            slaChart.update();
+        };
     </script>
 
     <script src="/js/api.js"></script>

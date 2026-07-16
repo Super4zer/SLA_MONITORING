@@ -60,32 +60,36 @@ class SlaMonitoringModel
         string $respondedBy,
         string $timeResponded,
         int $slaSeconds,
-        SlaStatus $statusSla
+        SlaStatus $statusSla,
+        ?string $responseContent = null
     ): bool {
         $stmt = $this->db->prepare("
             UPDATE ts_sla_monitoring 
             SET responded_by = :responded_by,
                 time_responded = :time_responded,
                 sla_seconds = :sla_seconds,
-                status_sla = :status_sla
+                status_sla = :status_sla,
+                response_content = :response_content
             WHERE id_monitoring = :id
         ");
 
         return $stmt->execute([
-            'responded_by'   => $respondedBy,
-            'time_responded' => $timeResponded,
-            'sla_seconds'    => $slaSeconds,
-            'status_sla'     => $statusSla->value,
-            'id'             => $idMonitoring
+            'responded_by'     => $respondedBy,
+            'time_responded'   => $timeResponded,
+            'sla_seconds'      => $slaSeconds,
+            'status_sla'       => $statusSla->value,
+            'response_content' => $responseContent,
+            'id'               => $idMonitoring
         ]);
     }
 
     public function getWaiting(int $maxSeconds = 180): array
     {
         $stmt = $this->db->prepare("
-            SELECT s.*, g.group_name 
+            SELECT s.*, g.group_name, cs.staff_name AS responded_by_name
             FROM ts_sla_monitoring s
             LEFT JOIN ts_group_whitelist g ON s.group_id = g.group_id
+            LEFT JOIN cs_staff_whitelist cs ON s.responded_by = cs.phone_number
             WHERE s.time_responded IS NULL 
               AND s.is_resolved_by_explanation = 0
               AND TIMESTAMPDIFF(SECOND, s.time_received, NOW()) <= :max_seconds
@@ -98,9 +102,10 @@ class SlaMonitoringModel
     public function getOverdue(int $maxSeconds = 180): array
     {
         $stmt = $this->db->prepare("
-            SELECT s.*, g.group_name 
+            SELECT s.*, g.group_name, cs.staff_name AS responded_by_name
             FROM ts_sla_monitoring s
             LEFT JOIN ts_group_whitelist g ON s.group_id = g.group_id
+            LEFT JOIN cs_staff_whitelist cs ON s.responded_by = cs.phone_number
             WHERE (s.time_responded IS NULL AND TIMESTAMPDIFF(SECOND, s.time_received, NOW()) > :max_seconds AND s.is_resolved_by_explanation = 0)
                OR (s.sla_seconds > :max_seconds_2 AND s.is_resolved_by_explanation = 0)
             ORDER BY s.time_received DESC
@@ -118,9 +123,10 @@ class SlaMonitoringModel
         // ditutup lewat penjelasan). Overdue yang diselesaikan by penjelasan
         // punya card sendiri, lihat getOverdueResolved().
         $stmt = $this->db->prepare("
-            SELECT s.*, g.group_name 
+            SELECT s.*, g.group_name, cs.staff_name AS responded_by_name
             FROM ts_sla_monitoring s
             LEFT JOIN ts_group_whitelist g ON s.group_id = g.group_id
+            LEFT JOIN cs_staff_whitelist cs ON s.responded_by = cs.phone_number
             WHERE s.sla_seconds <= :max_seconds 
               AND s.is_resolved_by_explanation = 0
             ORDER BY s.time_received DESC
@@ -136,9 +142,10 @@ class SlaMonitoringModel
         // di kolom status_sla (karena memang telat, untuk keperluan audit di
         // Laporan), hanya ditandai is_resolved_by_explanation = 1.
         $stmt = $this->db->prepare("
-            SELECT s.*, g.group_name 
+            SELECT s.*, g.group_name, cs.staff_name AS responded_by_name
             FROM ts_sla_monitoring s
             LEFT JOIN ts_group_whitelist g ON s.group_id = g.group_id
+            LEFT JOIN cs_staff_whitelist cs ON s.responded_by = cs.phone_number
             WHERE s.is_resolved_by_explanation = 1
             ORDER BY s.time_received DESC
         ");
@@ -236,9 +243,10 @@ class SlaMonitoringModel
         $total = (int) $countStmt->fetch()['total'];
 
         $stmt = $this->db->prepare("
-            SELECT s.*, g.group_name 
+            SELECT s.*, g.group_name, cs.staff_name AS responded_by_name
             FROM ts_sla_monitoring s
             LEFT JOIN ts_group_whitelist g ON s.group_id = g.group_id
+            LEFT JOIN cs_staff_whitelist cs ON s.responded_by = cs.phone_number
             $whereSql
             ORDER BY s.time_received DESC
             LIMIT :limit OFFSET :offset
