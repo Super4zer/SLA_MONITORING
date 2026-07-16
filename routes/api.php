@@ -3,6 +3,7 @@
 use App\Controllers\WebhookController;
 use App\Controllers\DashboardController;
 use App\Controllers\ActionController;
+use App\Controllers\GroupController;
 
 /** @var \App\Routing\Router $router */
 
@@ -78,3 +79,14 @@ $router->get('/api/monitoring/completed', [DashboardController::class, 'getCompl
 // Action Buttons
 $router->post('/api/monitoring/{id}/resolve', [ActionController::class, 'resolve']);
 $router->post('/api/monitoring/{id}/escalate', [ActionController::class, 'escalate']);
+// API Group Whitelist
+$router->get('/api/groups', [GroupController::class, 'getGroups']);
+$router->post('/api/groups', [GroupController::class, 'storeGroup']);
+
+// API Group Whitelist (Tambahkan di bawah rute grup yang sudah ada)
+$router->get('/api/groups', [GroupController::class, 'getGroups']);
+$router->post('/api/groups', [GroupController::class, 'storeGroup']);
+
+// Tambahkan Dua Baris Baru Ini:
+$router->post('/api/groups/update', [GroupController::class, 'updateGroup']);
+$router->post('/api/groups/delete', [GroupController::class, 'deleteGroup']);

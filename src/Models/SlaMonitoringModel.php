@@ -1,295 +1,614 @@
-<?php
+<!doctype html>
+<html lang="id">
 
-namespace App\Models;
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Manajemen Grub - SLA Monitoring Command Center</title>
 
-use App\Config\Database;
-use App\Models\Enums\Platform;
-use App\Models\Enums\SlaStatus;
-use PDO;
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <link rel="stylesheet" href="/css/grub.css">
 
-class SlaMonitoringModel
-{
-    private PDO $db;
-
-    public function __construct()
-    {
-        $this->db = Database::getConnection();
+    <style>
+    body {
+        font-family: "Inter", sans-serif;
+        background-color: #f2f3f7;
+        color: #1e1e2d;
+        overflow: hidden;
+        height: 100vh;
     }
 
-    public function insertComplaint(
-        string $groupId,
-        string $clientPhone,
-        string $messageContent,
-        string $timeReceived,
-        Platform $platform = Platform::WA
-    ): int {
-        $stmt = $this->db->prepare("
-            INSERT INTO ts_sla_monitoring 
-            (platform, group_id, client_phone, message_content, time_received, status_sla)
-            VALUES (:platform, :group_id, :client_phone, :message_content, :time_received, :status_sla)
-        ");
-
-        $stmt->execute([
-            'platform'        => $platform->value,
-            'group_id'        => $groupId,
-            'client_phone'    => $clientPhone,
-            'message_content' => $messageContent,
-            'time_received'   => $timeReceived,
-            'status_sla'      => SlaStatus::KUNING->value
-        ]);
-
-        return (int) $this->db->lastInsertId();
+    /* ================= SIDEBAR & LAYOUT ================= */
+    .sidebar {
+        width: 250px;
+        background-color: #1c1c24;
+        display: flex;
+        flex-direction: column;
+        z-index: 1010;
+        transition: all 0.3s;
     }
 
-    public function getAllUnrespondedComplaints(string $groupId): array
-    {
-        $stmt = $this->db->prepare("
-            SELECT * FROM ts_sla_monitoring 
-            WHERE group_id = :group_id 
-              AND time_responded IS NULL 
-              AND is_resolved_by_explanation = 0
-            ORDER BY time_received ASC 
-        ");
-
-        $stmt->execute(['group_id' => $groupId]);
-        return $stmt->fetchAll();
+    .sidebar-brand {
+        height: 80px;
+        display: flex;
+        align-items: center;
+        padding: 0 24px;
     }
 
-    public function updateResponse(
-        int $idMonitoring,
-        string $respondedBy,
-        string $timeResponded,
-        int $slaSeconds,
-        SlaStatus $statusSla
-    ): bool {
-        $stmt = $this->db->prepare("
-            UPDATE ts_sla_monitoring 
-            SET responded_by = :responded_by,
-                time_responded = :time_responded,
-                sla_seconds = :sla_seconds,
-                status_sla = :status_sla
-            WHERE id_monitoring = :id
-        ");
-
-        return $stmt->execute([
-            'responded_by'   => $respondedBy,
-            'time_responded' => $timeResponded,
-            'sla_seconds'    => $slaSeconds,
-            'status_sla'     => $statusSla->value,
-            'id'             => $idMonitoring
-        ]);
+    .sidebar-brand img {
+        max-width: 140px;
     }
 
-    public function getWaiting(int $maxSeconds = 180): array
-    {
-        $stmt = $this->db->prepare("
-            SELECT s.*, g.group_name 
-            FROM ts_sla_monitoring s
-            LEFT JOIN ts_group_whitelist g ON s.group_id = g.group_id
-            WHERE s.time_responded IS NULL 
-              AND s.is_resolved_by_explanation = 0
-              AND TIMESTAMPDIFF(SECOND, s.time_received, NOW()) <= :max_seconds
-            ORDER BY s.time_received ASC
-        ");
-        $stmt->execute(['max_seconds' => $maxSeconds]);
-        return $stmt->fetchAll();
+    .nav-sidebar {
+        margin-top: 10px;
     }
 
-    public function getOverdue(int $maxSeconds = 180): array
-    {
-        $stmt = $this->db->prepare("
-            SELECT s.*, g.group_name 
-            FROM ts_sla_monitoring s
-            LEFT JOIN ts_group_whitelist g ON s.group_id = g.group_id
-            WHERE (s.time_responded IS NULL AND TIMESTAMPDIFF(SECOND, s.time_received, NOW()) > :max_seconds AND s.is_resolved_by_explanation = 0)
-               OR (s.sla_seconds > :max_seconds_2 AND s.is_resolved_by_explanation = 0)
-            ORDER BY s.time_received DESC
-        ");
-        $stmt->execute([
-            'max_seconds'   => $maxSeconds,
-            'max_seconds_2' => $maxSeconds
-        ]);
-        return $stmt->fetchAll();
+    .nav-sidebar .nav-link {
+        color: #8b8b99;
+        font-weight: 500;
+        padding: 12px 24px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        font-size: 14px;
+        border-left: 3px solid transparent;
+        transition: all 0.2s ease;
     }
 
-    public function getCompleted(int $maxSeconds = 180): array
-    {
-        // Hanya tiket yang BENAR-BENAR selesai tepat waktu (bukan overdue yang
-        // ditutup lewat penjelasan). Overdue yang diselesaikan by penjelasan
-        // punya card sendiri, lihat getOverdueResolved().
-        $stmt = $this->db->prepare("
-            SELECT s.*, g.group_name 
-            FROM ts_sla_monitoring s
-            LEFT JOIN ts_group_whitelist g ON s.group_id = g.group_id
-            WHERE s.sla_seconds <= :max_seconds 
-              AND s.is_resolved_by_explanation = 0
-            ORDER BY s.time_received DESC
-        ");
-        $stmt->execute(['max_seconds' => $maxSeconds]);
-        return $stmt->fetchAll();
+    .nav-sidebar .nav-link:hover {
+        color: #ffffff;
+        background-color: rgba(255, 255, 255, 0.03);
     }
 
-    public function getOverdueResolved(): array
-    {
-        // Tiket yang sempat overdue (melewati batas SLA) tapi sudah
-        // ditindaklanjuti/ditutup lewat penjelasan. Statusnya tetap MERAH
-        // di kolom status_sla (karena memang telat, untuk keperluan audit di
-        // Laporan), hanya ditandai is_resolved_by_explanation = 1.
-        $stmt = $this->db->prepare("
-            SELECT s.*, g.group_name 
-            FROM ts_sla_monitoring s
-            LEFT JOIN ts_group_whitelist g ON s.group_id = g.group_id
-            WHERE s.is_resolved_by_explanation = 1
-            ORDER BY s.time_received DESC
-        ");
-        $stmt->execute();
-        return $stmt->fetchAll();
+    .nav-sidebar .nav-link.active {
+        color: #ffffff;
+        border-left: 3px solid #ccff00;
+        background: linear-gradient(90deg, rgba(204, 255, 0, 0.05) 0%, transparent 100%);
+        font-weight: 600;
     }
 
-    public function resolveByExplanation(int $idMonitoring): bool
-    {
-        // PENTING: status_sla TIDAK diubah jadi HIJAU. Tiket ini tetap MERAH
-        // (telat) karena memang melanggar SLA — hanya statusnya "sudah
-        // ditindaklanjuti/dijelaskan" lewat flag is_resolved_by_explanation.
-        // Ini memastikan riwayatnya tetap tercatat sebagai keterlambatan di
-        // Laporan/audit log, bukan disamarkan jadi seolah tepat waktu.
-        $stmt = $this->db->prepare("
-            UPDATE ts_sla_monitoring 
-            SET is_resolved_by_explanation = 1,
-                status_sla = :status_sla
-            WHERE id_monitoring = :id
-        ");
-        return $stmt->execute([
-            'status_sla' => SlaStatus::MERAH->value,
-            'id' => $idMonitoring
-        ]);
+    .nav-sidebar .nav-link.active .material-symbols-outlined {
+        color: #ccff00;
     }
 
-    public function escalateComplaint(int $idMonitoring, int $logKlikdsiId): bool
-    {
-        $stmt = $this->db->prepare("
-            UPDATE ts_sla_monitoring 
-            SET log_klikdsi_id = :log_id
-            WHERE id_monitoring = :id
-        ");
-        return $stmt->execute([
-            'log_id' => $logKlikdsiId,
-            'id'     => $idMonitoring
-        ]);
+    .sidebar-footer {
+        padding: 24px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
     }
 
-    public function getSummary(): array
-    {
-        $stmt = $this->db->query("
-            SELECT
-                SUM(CASE WHEN time_responded IS NULL AND is_resolved_by_explanation = 0 
-                         AND TIMESTAMPDIFF(SECOND, time_received, NOW()) <= 180 THEN 1 ELSE 0 END) AS waiting,
-                SUM(CASE WHEN (time_responded IS NULL AND is_resolved_by_explanation = 0 
-                         AND TIMESTAMPDIFF(SECOND, time_received, NOW()) > 180)
-                         OR (sla_seconds > 180 AND is_resolved_by_explanation = 0) THEN 1 ELSE 0 END) AS overdue,
-                SUM(CASE WHEN is_resolved_by_explanation = 1 THEN 1 ELSE 0 END) AS overdue_resolved,
-                SUM(CASE WHEN sla_seconds <= 180 AND is_resolved_by_explanation = 0 THEN 1 ELSE 0 END) AS completed
-            FROM ts_sla_monitoring
-        ");
-        $row = $stmt->fetch();
-        return [
-            'waiting'          => (int) ($row['waiting'] ?? 0),
-            'overdue'          => (int) ($row['overdue'] ?? 0),
-            'overdue_resolved' => (int) ($row['overdue_resolved'] ?? 0),
-            'completed'        => (int) ($row['completed'] ?? 0),
-        ];
+    .sidebar-footer .avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background-color: #3b3b45;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-weight: bold;
+        font-size: 14px;
     }
 
-    public function getHistory(
-        ?string $startDate = null,
-        ?string $endDate = null,
-        ?string $groupId = null,
-        int $page = 1,
-        int $perPage = 20
-    ): array {
-        $where = [];
-        $params = [];
+    .sidebar-footer .user-info p {
+        margin: 0;
+        color: #ffffff;
+        font-size: 13px;
+        font-weight: 600;
+    }
 
-        if ($startDate) {
-            $where[] = "s.time_received >= :start_date";
-            $params['start_date'] = $startDate . ' 00:00:00';
+    .sidebar-footer .user-info span {
+        color: #8b8b99;
+        font-size: 11px;
+    }
+
+    .main-wrapper {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        overflow: hidden;
+    }
+
+    .topbar {
+        height: 80px;
+        background-color: transparent;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 32px;
+    }
+
+    .main-content {
+        flex-grow: 1;
+        overflow-y: auto;
+        padding: 0 32px 32px 32px;
+    }
+
+    /* ================= CARDS & COMPONENTS ================= */
+    .dashboard-card {
+        background: #ffffff;
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.03);
+        padding: 24px;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* Custom Notification Panel */
+    .cmd-notification {
+        position: fixed;
+        top: 30px;
+        right: -400px;
+        width: 320px;
+        background-color: #1c1c24;
+        border-radius: 12px;
+        padding: 16px 20px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        z-index: 9999;
+        transition: right 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        border-left: 4px solid transparent;
+    }
+
+    .cmd-notification.show {
+        right: 30px;
+    }
+
+    .cmd-notification.success {
+        border-left-color: #ccff00;
+    }
+
+    .cmd-notification.error {
+        border-left-color: #f43f5e;
+    }
+
+    .cmd-notif-icon {
+        font-size: 28px;
+    }
+
+    .cmd-notification.success .cmd-notif-icon {
+        color: #ccff00;
+    }
+
+    .cmd-notification.error .cmd-notif-icon {
+        color: #f43f5e;
+    }
+
+    .cmd-notif-content {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .cmd-notif-title {
+        color: #ffffff;
+        font-weight: 600;
+        font-size: 14px;
+        margin-bottom: 2px;
+    }
+
+    .cmd-notif-msg {
+        color: #8b8b99;
+        font-size: 12px;
+        line-height: 1.4;
+    }
+
+    /* Custom Dark Modal Command Center */
+    .modal-cmd-content {
+        background-color: #1c1c24;
+        color: #ffffff;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .modal-cmd-header {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        padding: 20px;
+    }
+
+    .modal-cmd-footer {
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+        padding: 20px;
+    }
+
+    .modal-cmd-content .form-control {
+        background-color: #282833;
+        border: 1px solid #3b3b4d;
+        color: #ffffff;
+    }
+
+    .modal-cmd-content .form-control:focus {
+        background-color: #282833;
+        border-color: #ccff00;
+        color: #ffffff;
+        box-shadow: none;
+    }
+
+    .modal-cmd-content .form-label {
+        color: #8b8b99;
+        font-weight: 500;
+    }
+    </style>
+</head>
+
+<body>
+    <div id="cmdNotification" class="cmd-notification">
+        <span class="material-symbols-outlined cmd-notif-icon" id="cmdNotifIcon">check_circle</span>
+        <div class="cmd-notif-content">
+            <span class="cmd-notif-title" id="cmdNotifTitle">Berhasil</span>
+            <span class="cmd-notif-msg" id="cmdNotifMsg">Pesan di sini.</span>
+        </div>
+    </div>
+
+    <div class="modal fade" id="editGrubModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content modal-cmd-content">
+                <div class="modal-header modal-cmd-header">
+                    <h5 class="modal-title fw-bold d-flex align-items-center gap-2">
+                        <span class="material-symbols-outlined text-warning">edit_square</span> Edit Data Grub
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <form id="editGrubForm">
+                    <div class="modal-body p-4">
+                        <input type="hidden" id="editId" />
+                        <div class="mb-3">
+                            <label class="form-label" for="editGrubId">ID Grub</label>
+                            <input type="text" class="form-control" id="editGrubId" required />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="editGrubName">Nama Grub</label>
+                            <input type="text" class="form-control" id="editGrubName" required />
+                        </div>
+                    </div>
+                    <div class="modal-footer modal-cmd-footer">
+                        <button type="button" class="btn btn-secondary px-3" style="border-radius: 8px;"
+                            data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary px-4"
+                            style="background-color: #ccff00; color: #1c1c24; border: none; font-weight: 600; border-radius: 8px;">Simpan
+                            Perubahan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="deleteGrubModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content modal-cmd-content">
+                <div class="modal-body text-center p-4">
+                    <span class="material-symbols-outlined text-danger mb-2" style="font-size: 48px;">warning</span>
+                    <h6 class="fw-bold text-white mb-2">Hapus Data Grub?</h6>
+                    <p class="text-muted small mb-4">Tindakan ini tidak dapat dibatalkan secara permanen.</p>
+                    <input type="hidden" id="deleteId" />
+                    <div class="d-flex gap-2 justify-content-center">
+                        <button type="button" class="btn btn-secondary btn-sm px-3" style="border-radius: 6px;"
+                            data-bs-dismiss="modal">Batal</button>
+                        <button type="button" id="btnConfirmDelete" class="btn btn-danger btn-sm px-3"
+                            style="border-radius: 6px; background-color: #f43f5e;">Ya, Hapus</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex h-100 w-100">
+        <aside class="sidebar d-none d-lg-flex">
+            <div class="sidebar-brand">
+                <span class="fw-bold text-white fs-4 d-flex justify-content-center align-items-center">
+                    <img src="/images/DSI.png" alt="DSI Logo" width="auto" height="180px" class="mt-3" />
+                </span>
+            </div>
+            <nav class="nav-sidebar flex-grow-1">
+                <a href="/dashboard" class="nav-link"><span class="material-symbols-outlined fs-5">grid_view</span>
+                    Dashboard</a>
+                <a href="/grub" class="nav-link active"><span
+                        class="material-symbols-outlined fs-5">confirmation_number</span> Tambah Grub</a>
+                <a href="/laporan" class="nav-link"><span class="material-symbols-outlined fs-5">bar_chart</span>
+                    Laporan Kinerja</a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="avatar"><span class="material-symbols-outlined fs-6">person</span></div>
+                <div class="user-info">
+                    <p>Admin DSI</p><span>Administrator</span>
+                </div>
+                <a href="#" class="ms-auto text-secondary"><span
+                        class="material-symbols-outlined fs-5">logout</span></a>
+            </div>
+        </aside>
+
+        <div class="main-wrapper">
+            <header class="topbar">
+                <div>
+                    <h4 class="m-0 fw-bold text-dark">Manajemen Grub Whitelist</h4>
+                </div>
+                <div class="tabular-clock" id="live-clock"><span class="material-symbols-outlined fs-6">schedule</span>
+                    00:00:00</div>
+            </header>
+
+            <main class="main-content">
+                <div class="row g-4 h-100">
+                    <div class="col-lg-4">
+                        <div class="dashboard-card">
+                            <div class="card-title-custom">
+                                <a href="/grub" class="nav-link">
+                                    <span class="material-symbols-outlined fs-5">confirmation_number</span> Tambah Grub
+                                </a>
+                            </div>
+                            <form id="grubForm">
+                                <input type="hidden" id="formAction" value="create" />
+                                <div class="mb-4">
+                                    <label class="form-label" for="grubId">ID Grub</label>
+                                    <input type="text" class="form-control" id="grubId"
+                                        placeholder="Contoh: 12036304XXXXX@g.us" required />
+                                    <small class="text-muted mt-1 d-block" style="font-size: 12px">Masukkan ID unik grup
+                                        WhatsApp/Telegram.</small>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="form-label" for="grubName">Nama Grub</label>
+                                    <input type="text" class="form-control" id="grubName"
+                                        placeholder="Contoh: Tim IT Support" required />
+                                </div>
+                                <div class="d-flex gap-2 mt-2">
+                                    <button type="submit" class="btn-primary-custom flex-grow-1 justify-content-center">
+                                        <span class="material-symbols-outlined fs-6">save</span> Simpan Data
+                                    </button>
+                                    <button type="reset" class="btn-light-custom" id="btnReset">Batal</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-8">
+                        <div class="dashboard-card pb-0">
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <div class="card-title-custom mb-0"><span
+                                        class="material-symbols-outlined">list_alt</span> Daftar Grub Terdaftar</div>
+                                <div class="position-relative">
+                                    <input type="text" class="form-control form-control-sm ps-4"
+                                        placeholder="Cari grub..." style="width: 250px; border-radius: 8px" />
+                                    <span class="material-symbols-outlined position-absolute"
+                                        style="top: 8px; left: 10px; font-size: 18px; color: #a1a1aa;">search</span>
+                                </div>
+                            </div>
+                            <div class="table-container mb-4">
+                                <table class="table table-nowrap">
+                                    <thead>
+                                        <tr>
+                                            <th width="5%">No</th>
+                                            <th width="35%">ID Grub</th>
+                                            <th width="40%">Nama Grub</th>
+                                            <th width="20%" class="text-center">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="grubTableBody">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+    // 1. Live Clock
+    setInterval(() => {
+        const now = new Date();
+        const time = now.toLocaleTimeString("id-ID", {
+            hour12: false
+        });
+        document.getElementById("live-clock").innerHTML =
+            `<span class="material-symbols-outlined fs-6">schedule</span> ${time}`;
+    }, 1000);
+
+    // 2. Custom Notification
+    let notifTimeout;
+
+    function showCmdNotification(title, message, type = 'success') {
+        const notifBox = document.getElementById('cmdNotification');
+        const notifIcon = document.getElementById('cmdNotifIcon');
+        const notifTitle = document.getElementById('cmdNotifTitle');
+        const notifMsg = document.getElementById('cmdNotifMsg');
+
+        notifBox.className = 'cmd-notification';
+        clearTimeout(notifTimeout);
+
+        if (type === 'success') {
+            notifBox.classList.add('success');
+            notifIcon.textContent = 'check_circle';
+        } else {
+            notifBox.classList.add('error');
+            notifIcon.textContent = 'error';
         }
-        if ($endDate) {
-            $where[] = "s.time_received <= :end_date";
-            $params['end_date'] = $endDate . ' 23:59:59';
-        }
-        if ($groupId) {
-            $where[] = "s.group_id = :group_id";
-            $params['group_id'] = $groupId;
-        }
 
-        $whereSql = $where ? 'WHERE ' . implode(' AND ', $where) : '';
-        $offset = ($page - 1) * $perPage;
+        notifTitle.textContent = title;
+        notifMsg.textContent = message;
 
-        // Ambil total data dulu, untuk info pagination di frontend
-        $countStmt = $this->db->prepare("
-            SELECT COUNT(*) as total 
-            FROM ts_sla_monitoring s
-            $whereSql
-        ");
-        $countStmt->execute($params);
-        $total = (int) $countStmt->fetch()['total'];
-
-        $stmt = $this->db->prepare("
-            SELECT s.*, g.group_name 
-            FROM ts_sla_monitoring s
-            LEFT JOIN ts_group_whitelist g ON s.group_id = g.group_id
-            $whereSql
-            ORDER BY s.time_received DESC
-            LIMIT :limit OFFSET :offset
-        ");
-        foreach ($params as $key => $val) {
-            $stmt->bindValue(":$key", $val);
-        }
-        $stmt->bindValue(':limit', $perPage, PDO::PARAM_INT);
-        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
-        $stmt->execute();
-
-        return [
-            'data' => $stmt->fetchAll(),
-            'pagination' => [
-                'page' => $page,
-                'per_page' => $perPage,
-                'total' => $total,
-                'total_pages' => (int) ceil($total / $perPage),
-            ],
-        ];
+        setTimeout(() => {
+            notifBox.classList.add('show');
+        }, 50);
+        notifTimeout = setTimeout(() => {
+            notifBox.classList.remove('show');
+        }, 3500);
     }
 
-    public function getStaffPerformance(?string $startDate = null, ?string $endDate = null): array
-    {
-        $where = ["responded_by IS NOT NULL"];
-        $params = [];
+    // 3. Global State untuk Cache Data Tabel
+    const API_GROUP_URL = '/api/groups';
+    const tableBody = document.getElementById('grubTableBody');
+    let localGroupsCache = []; // Menyimpan data sementara untuk kemudahan Edit
 
-        if ($startDate) {
-            $where[] = "time_received >= :start_date";
-            $params['start_date'] = $startDate . ' 00:00:00';
+    // Load Data
+    async function loadGroups() {
+        tableBody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Memuat data...</td></tr>';
+        try {
+            const response = await fetch(API_GROUP_URL);
+            const result = await response.json();
+
+            if (result.status === 'success' && result.data.length > 0) {
+                localGroupsCache = result.data; // Simpan di cache lokal
+                tableBody.innerHTML = result.data.map((group, index) => `
+                    <tr>
+                        <td class="fw-medium text-muted">${index + 1}</td>
+                        <td class="font-monospace text-secondary">${group.group_id}</td>
+                        <td class="fw-medium">${group.group_name}</td>
+                        <td class="text-center">
+                            <button class="action-btn edit" title="Edit Data" onclick="openEditModal(${group.id})">
+                                <span class="material-symbols-outlined">edit_square</span>
+                            </button>
+                            <button class="action-btn delete" title="Hapus Data" onclick="openDeleteModal(${group.id})">
+                                <span class="material-symbols-outlined">delete</span>
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            } else {
+                tableBody.innerHTML =
+                    '<tr><td colspan="4" class="text-center text-muted">Belum ada grup yang terdaftar</td></tr>';
+            }
+        } catch (error) {
+            tableBody.innerHTML =
+                '<tr><td colspan="4" class="text-center text-danger">Gagal terhubung ke server</td></tr>';
         }
-        if ($endDate) {
-            $where[] = "time_received <= :end_date";
-            $params['end_date'] = $endDate . ' 23:59:59';
-        }
-
-        $whereSql = 'WHERE ' . implode(' AND ', $where);
-
-        $stmt = $this->db->prepare("
-            SELECT 
-                responded_by,
-                COUNT(*) AS total_respon,
-                ROUND(AVG(sla_seconds)) AS rata_rata_sla_detik,
-                SUM(CASE WHEN status_sla = 'HIJAU' THEN 1 ELSE 0 END) AS tepat_waktu,
-                SUM(CASE WHEN status_sla = 'MERAH' THEN 1 ELSE 0 END) AS terlambat
-            FROM ts_sla_monitoring
-            $whereSql
-            GROUP BY responded_by
-            ORDER BY total_respon DESC
-        ");
-        $stmt->execute($params);
-        return $stmt->fetchAll();
     }
-}
+
+    // 4. Tambah Data (Create)
+    document.getElementById('grubForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btnSubmit = e.target.querySelector('button[type="submit"]');
+        btnSubmit.disabled = true;
+
+        const payload = {
+            group_id: document.getElementById('grubId').value,
+            group_name: document.getElementById('grubName').value
+        };
+
+        try {
+            const response = await fetch(API_GROUP_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+            const result = await response.json();
+
+            if (result.status === 'success') {
+                showCmdNotification('Registrasi Sukses', 'Data grup telah ditambahkan ke database.',
+                    'success');
+                document.getElementById('grubForm').reset();
+                loadGroups();
+            } else {
+                showCmdNotification('Gagal Menyimpan', result.message, 'error');
+            }
+        } catch (error) {
+            showCmdNotification('Koneksi Terputus', 'Gagal menghubungi server.', 'error');
+        } finally {
+            btnSubmit.disabled = false;
+            btnSubmit.innerHTML = `<span class="material-symbols-outlined fs-6">save</span> Simpan Data`;
+        }
+    });
+
+    // ==========================================
+    // 5. LOGIKA TOMBOL EDIT (FORM MODAL & PUT FETCH)
+    // ==========================================
+    const bsEditModal = new bootstrap.Modal(document.getElementById('editGrubModal'));
+
+    function openEditModal(id) {
+        // Cari objek grup di data lokal cache berdasarkan id database
+        const targetGroup = localGroupsCache.find(g => g.id == id);
+        if (targetGroup) {
+            document.getElementById('editId').value = targetGroup.id;
+            document.getElementById('editGrubId').value = targetGroup.group_id;
+            document.getElementById('editGrubName').value = targetGroup.group_name;
+            bsEditModal.show();
+        }
+    }
+
+    document.getElementById('editGrubForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('editId').value;
+        const payload = {
+            id: id,
+            group_id: document.getElementById('editGrubId').value,
+            group_name: document.getElementById('editGrubName').value
+        };
+
+        try {
+            const response = await fetch('/api/groups/update', {
+                method: 'POST', // Menggunakan POST /api/groups/update agar rute mudah dicocokkan kustom router
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+            const result = await response.json();
+
+            if (result.status === 'success') {
+                showCmdNotification('Update Sukses', 'Perubahan data grup berhasil diperbarui.', 'success');
+                bsEditModal.hide();
+                loadGroups();
+            } else {
+                showCmdNotification('Update Gagal', result.message, 'error');
+            }
+        } catch (error) {
+            showCmdNotification('Error Sistem', 'Gagal melakukan pembaruan.', 'error');
+        }
+    });
+
+    // ==========================================
+    // 6. LOGIKA TOMBOL DELETE (CONFIRM MODAL & POST FETCH)
+    // ==========================================
+    const bsDeleteModal = new bootstrap.Modal(document.getElementById('deleteGrubModal'));
+
+    function openDeleteModal(id) {
+        document.getElementById('deleteId').value = id;
+        bsDeleteModal.show();
+    }
+
+    document.getElementById('btnConfirmDelete').addEventListener('click', async () => {
+        const id = document.getElementById('deleteId').value;
+
+        try {
+            const response = await fetch('/api/groups/delete', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    id: id
+                })
+            });
+            const result = await response.json();
+
+            if (result.status === 'success') {
+                showCmdNotification('Data Dihapus', 'Grup berhasil dihapus dari whitelist.', 'success');
+                bsDeleteModal.hide();
+                loadGroups();
+            } else {
+                showCmdNotification('Gagal Hapus', result.message, 'error');
+            }
+        } catch (error) {
+            showCmdNotification('Error Jaringan', 'Gagal memproses penghapusan.', 'error');
+        }
+    });
+
+    // Jalankan pertama kali halaman dibuka
+    document.addEventListener('DOMContentLoaded', loadGroups);
+    </script>
+</body>
+
+</html>
