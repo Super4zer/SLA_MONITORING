@@ -24,7 +24,7 @@ class WebhookController
     {
         // 1. Ambil raw input
         $rawPayload = file_get_contents('php://input');
-        
+
         // Log untuk debugging
         $logDir = __DIR__ . '/../../logs';
         if (!is_dir($logDir)) {
@@ -49,13 +49,11 @@ class WebhookController
         }
 
         // 3. Normalisasi Data (Perbaikan Mapping)
-        $isGroup = (bool)($data['isGroup'] ?? false);
-        
+        $isGroup = (bool) ($data['isGroup'] ?? false);
+
         // ID Grup di payload Anda berada di $data['group']['sender']
-        $groupId = $data['group']['sender'] ?? null; 
-        
-        // Nomor pengirim berada di $data['phone']
-        $senderPhone = $data['phone'] ?? null;
+        $groupId = $data['group']['group_id'] ?? null;
+        $senderPhone = $data['group']['sender'] ?? null;
         $messageContent = $data['message'] ?? '';
 
         // Normalisasi nomor telepon
@@ -66,7 +64,7 @@ class WebhookController
         // 4. Validasi Dasar
         if (!$isGroup || !$groupId || !$senderPhone) {
             return [
-                'status' => 'ignored', 
+                'status' => 'ignored',
                 'message' => 'Not a group message or missing required fields. isGroup=' . ($isGroup ? 'true' : 'false') . ', groupId=' . ($groupId ?? 'null')
             ];
         }
@@ -88,7 +86,7 @@ class WebhookController
                 foreach ($pendingComplaints as $complaint) {
                     $timeReceived = $complaint['time_received'];
                     $slaSeconds = strtotime($timeNow) - strtotime($timeReceived);
-                    
+
                     // SLA 180 detik
                     $statusSla = $slaSeconds <= 180 ? SlaStatus::HIJAU : SlaStatus::MERAH;
 
@@ -103,7 +101,7 @@ class WebhookController
                 return ['status' => 'success', 'message' => count($pendingComplaints) . ' SLA record(s) updated'];
             }
             return ['status' => 'ignored', 'message' => 'No pending complaint in this group'];
-            
+
         } else {
             // Klien bertanya: Insert baru
             $this->slaModel->insertComplaint(
