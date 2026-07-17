@@ -34,7 +34,7 @@ class WebhookController
 
         $rawPayload = file_get_contents('php://input');
 
-        // Save raw payload to log for debugging
+
         $logDir = __DIR__ . '/../../logs';
         if (!is_dir($logDir)) {
             mkdir($logDir, 0755, true);
@@ -76,11 +76,12 @@ class WebhookController
             return ['status' => 'ignored', 'message' => 'Device status event, not a chat message'];
         }
 
-        // Ambil field-field yang kita butuhkan sesuai format nyata Wablas
-        $isGroup  = (bool)($data['isGroup'] ?? false);
-        $groupObj = $data['group'] ?? [];
-        $groupId  = $groupObj['group_id'] ?? null;   // ID grup asli ada di sini
-        $senderPhone  = $groupObj['sender'] ?? null; // nomor pengirim ada di sini
+        // 3. Normalisasi Data (Perbaikan Mapping)
+        $isGroup = (bool) ($data['isGroup'] ?? false);
+
+        // ID Grup di payload Anda berada di $data['group']['sender']
+        $groupId = $data['group']['group_id'] ?? null;
+        $senderPhone = $data['group']['sender'] ?? null;
         $messageContent = $data['message'] ?? '';
 
         // Normalize phone number (hapus + jika ada)
@@ -90,7 +91,10 @@ class WebhookController
 
         // Abaikan jika bukan pesan dari grup, atau field penting kosong
         if (!$isGroup || !$groupId || !$senderPhone) {
-            return ['status' => 'ignored', 'message' => 'Not a group message or missing required fields. isGroup=' . ($isGroup ? 'true' : 'false') . ', groupId=' . ($groupId ?? 'null')];
+            return [
+                'status' => 'ignored',
+                'message' => 'Not a group message or missing required fields. isGroup=' . ($isGroup ? 'true' : 'false') . ', groupId=' . ($groupId ?? 'null')
+            ];
         }
 
         // Lapis Kedua: Cek apakah grup ini ada di whitelist
@@ -113,6 +117,7 @@ class WebhookController
                     $timeReceived = $complaint['time_received'];
                     $slaSeconds = strtotime($timeNow) - strtotime($timeReceived);
 
+                    // SLA 180 detik
                     $statusSla = $slaSeconds <= 180 ? SlaStatus::HIJAU : SlaStatus::MERAH;
 
                     $this->slaModel->updateResponse(
@@ -135,6 +140,15 @@ class WebhookController
             }
 
             return ['status' => 'ignored', 'message' => 'No pending complaint in this group'];
+        } else {
+            // Klien bertanya: Insert baru
+            $this->slaModel->insertComplaint(
+                $groupId,
+                $senderPhone,
+                $messageContent,
+                $timeNow
+            );
+            return ['status' => 'success', 'message' => 'Complaint logged'];
         }
 
         // Pesan dari klien — HANYA simpan sebagai komplain kalau diawali command tertentu.

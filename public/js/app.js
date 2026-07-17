@@ -78,10 +78,10 @@
     header.appendChild(client);
     header.appendChild(time);
 
-    // Body: Message
+    // Message
     const message = document.createElement('div');
     message.className = 'ticket-message';
-    message.textContent = ticket.message_content;
+    message.textContent = ticket.message_content; // textContent is safe from XSS
 
     // Footer: Duration & Actions
     const footer = document.createElement('div');
@@ -180,8 +180,7 @@
     if (!window.SLA_API) return;
     const res = await window.SLA_API.escalate(id, `Client ${phone}`, msg);
     if (res && res.status === 'success') {
-      alert(`Berhasil dieskalasi dengan Log ID: ${res.log_klikdsi_id}`);
-      refreshDashboard();
+      alert('Berhasil eskalasi ke grup Telegram!');
     } else {
       alert('Gagal eskalasi komplain');
     }
@@ -195,7 +194,7 @@
       const empty = document.createElement('div');
       empty.className = 'text-center text-muted py-5';
       empty.style.fontSize = '13px';
-      empty.textContent = 'Tidak ada data...';
+      empty.textContent = 'Tidak ada data.';
       container.appendChild(empty);
       return;
     }
