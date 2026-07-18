@@ -272,8 +272,7 @@ if (isset($_GET['action'])) {
                     <div class="d-flex align-items-center gap-3 flex-wrap">
                         <div class="d-flex gap-3">
                             <div class="legend-item"><span class="dot-indicator bg-completed"></span> Tepat waktu</div>
-                            <div class="legend-item"><span class="dot-indicator bg-overdue"></span> Terlambat &gt;3
-                                menit</div>
+                            <div class="legend-item"><span class="dot-indicator bg-overdue"></span> Terlambat</div>
                         </div>
                         <div class="range-nav">
                             <button id="btn-prev"><span
