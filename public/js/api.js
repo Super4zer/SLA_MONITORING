@@ -18,9 +18,7 @@ window.SLA_API = {
   login: (username, password) =>
     fetchJSON(`/api/login`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username, password }),
     }),
 
@@ -30,19 +28,28 @@ window.SLA_API = {
   getCompleted: () => fetchJSON(`${API_BASE}/completed`),
 
   resolve: (id) =>
-    fetchJSON(`${API_BASE}/${id}/resolve`, {
-      method: "POST",
-    }),
+    fetchJSON(`${API_BASE}/${id}/resolve`, { method: "POST" }),
 
   escalate: (id, clientName, complaint) =>
     fetchJSON(`${API_BASE}/${id}/escalate`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        client_name: clientName,
-        complaint: complaint,
-      }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ client_name: clientName, complaint: complaint }),
+    }),
+
+  // ==== History "Terselesaikan" (search, filter tanggal/bulan, delete) ====
+  getHistoryResolved: (params = {}) => {
+    const cleanParams = Object.fromEntries(
+      Object.entries(params).filter(([, v]) => v !== null && v !== undefined && v !== '')
+    );
+    const query = new URLSearchParams(cleanParams).toString();
+    return fetchJSON(`${API_BASE}/history-resolved${query ? '?' + query : ''}`);
+  },
+
+  deleteHistoryResolved: (months) =>
+    fetchJSON(`${API_BASE}/history-resolved/delete`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ months }),
     }),
 };
