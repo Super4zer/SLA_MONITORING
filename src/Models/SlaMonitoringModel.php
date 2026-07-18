@@ -119,9 +119,6 @@ class SlaMonitoringModel
 
     public function getCompleted(int $maxSeconds = 180): array
     {
-        // Hanya tiket yang BENAR-BENAR selesai tepat waktu (bukan overdue yang
-        // ditutup lewat penjelasan). Overdue yang diselesaikan by penjelasan
-        // punya card sendiri, lihat getOverdueResolved().
         $stmt = $this->db->prepare("
             SELECT s.*, g.group_name, cs.staff_name AS responded_by_name
             FROM ts_sla_monitoring s
@@ -137,10 +134,6 @@ class SlaMonitoringModel
 
     public function getOverdueResolved(): array
     {
-        // Tiket yang sempat overdue (melewati batas SLA) tapi sudah
-        // ditindaklanjuti/ditutup lewat penjelasan. Statusnya tetap MERAH
-        // di kolom status_sla (karena memang telat, untuk keperluan audit di
-        // Laporan), hanya ditandai is_resolved_by_explanation = 1.
         $stmt = $this->db->prepare("
             SELECT s.*, g.group_name, cs.staff_name AS responded_by_name
             FROM ts_sla_monitoring s
@@ -155,11 +148,6 @@ class SlaMonitoringModel
 
     public function resolveByExplanation(int $idMonitoring): bool
     {
-        // PENTING: status_sla TIDAK diubah jadi HIJAU. Tiket ini tetap MERAH
-        // (telat) karena memang melanggar SLA — hanya statusnya "sudah
-        // ditindaklanjuti/dijelaskan" lewat flag is_resolved_by_explanation.
-        // Ini memastikan riwayatnya tetap tercatat sebagai keterlambatan di
-        // Laporan/audit log, bukan disamarkan jadi seolah tepat waktu.
         $stmt = $this->db->prepare("
             UPDATE ts_sla_monitoring 
             SET is_resolved_by_explanation = 1,
@@ -233,7 +221,6 @@ class SlaMonitoringModel
         $whereSql = $where ? 'WHERE ' . implode(' AND ', $where) : '';
         $offset = ($page - 1) * $perPage;
 
-        // Ambil total data dulu, untuk info pagination di frontend
         $countStmt = $this->db->prepare("
             SELECT COUNT(*) as total 
             FROM ts_sla_monitoring s
@@ -299,5 +286,84 @@ class SlaMonitoringModel
         ");
         $stmt->execute($params);
         return $stmt->fetchAll();
+    }
+
+    // ============================================================
+    // HISTORY "TERSELESAIKAN" — dipakai di Dashboard & Laporan Kinerja
+    // ============================================================
+
+    public function getResolvedHistory(array $filters = []): array
+    {
+        // "Terselesaikan" = gabungan: sudah dijawab tepat waktu (auto)
+        // ATAU sudah ditandai selesai lewat penjelasan (termasuk yang telat).
+        $where = ["(s.time_responded IS NOT NULL AND (s.sla_seconds <= 180 OR s.is_resolved_by_explanation = 1))"];
+        $params = [];
+
+        if (!empty($filters['date'])) {
+            $where[] = "DATE(s.time_received) = :date";
+            $params['date'] = $filters['date'];
+        } elseif (!empty($filters['month'])) {
+            $year = $filters['year'] ?? date('Y');
+            $where[] = "YEAR(s.time_received) = :year AND MONTH(s.time_received) = :month";
+            $params['year'] = $year;
+            $params['month'] = $filters['month'];
+        }
+
+        if (!empty($filters['search'])) {
+            $where[] = "(s.client_phone LIKE :search OR s.message_content LIKE :search OR g.group_name LIKE :search)";
+            $params['search'] = '%' . $filters['search'] . '%';
+        }
+
+        $whereSql = 'WHERE ' . implode(' AND ', $where);
+        $page = max(1, (int) ($filters['page'] ?? 1));
+        $perPage = 20;
+        $offset = ($page - 1) * $perPage;
+
+        $countStmt = $this->db->prepare("
+            SELECT COUNT(*) as total
+            FROM ts_sla_monitoring s
+            LEFT JOIN ts_group_whitelist g ON s.group_id = g.group_id
+            $whereSql
+        ");
+        $countStmt->execute($params);
+        $total = (int) $countStmt->fetch()['total'];
+
+        $stmt = $this->db->prepare("
+            SELECT s.*, g.group_name, cs.staff_name AS responded_by_name
+            FROM ts_sla_monitoring s
+            LEFT JOIN ts_group_whitelist g ON s.group_id = g.group_id
+            LEFT JOIN cs_staff_whitelist cs ON s.responded_by = cs.phone_number
+            $whereSql
+            ORDER BY s.time_received DESC
+            LIMIT :limit OFFSET :offset
+        ");
+        foreach ($params as $key => $val) {
+            $stmt->bindValue(":$key", $val);
+        }
+        $stmt->bindValue(':limit', $perPage, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return [
+            'data' => $stmt->fetchAll(),
+            'pagination' => [
+                'page' => $page,
+                'per_page' => $perPage,
+                'total' => $total,
+                'total_pages' => (int) ceil($total / $perPage),
+            ],
+        ];
+    }
+
+    public function deleteResolvedOlderThanMonths(int $months): int
+    {
+        $stmt = $this->db->prepare("
+            DELETE FROM ts_sla_monitoring
+            WHERE (time_responded IS NOT NULL AND (sla_seconds <= 180 OR is_resolved_by_explanation = 1))
+              AND time_received < (NOW() - INTERVAL :months MONTH)
+        ");
+        $stmt->bindValue(':months', $months, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->rowCount();
     }
 }

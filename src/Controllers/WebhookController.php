@@ -9,10 +9,7 @@ use App\Models\Enums\SlaStatus;
 
 class WebhookController
 {
-    // Klien wajib mengawali pesan dengan command ini supaya tercatat sebagai komplain.
-    // Chat basa-basi biasa akan diabaikan, tidak numpuk di database.
     private const COMPLAINT_TRIGGER = '#komplain';
-
     private SlaMonitoringModel $slaModel;
     private StaffWhitelistModel $staffModel;
     private GroupWhitelistModel $groupModel;
