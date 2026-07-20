@@ -43,16 +43,6 @@ $router->get('/grub', function () {
         echo "Grub management page not found.";
     }
 });
-$router->get('/laporan', function () {
-    $html = __DIR__ . '/../public/views/laporan.php';
-    if (file_exists($html)) {
-        header('Content-Type: text/html');
-        require_once $html; 
-    } else {
-        http_response_code(404);
-        echo "Grub management page not found.";
-    }
-});
 
 // Frontend: Halaman Manajemen Agent CS (/agen-cs)
 $router->get('/agen-cs', function () {
@@ -74,6 +64,22 @@ $router->get('/laporan', function () {
     } else {
         http_response_code(404);
         echo "Grub management page not found.";
+    }
+});
+
+// POST /laporan dibutuhkan supaya fitur "Hapus Chat" (delete log via
+// kalender di laporan.php) benar-benar sampai ke backend. Tanpa ini,
+// request POST ke /laporan tidak match route apapun dan router otomatis
+// balas 404 -- tombolnya jalan di frontend tapi datanya tidak pernah
+// benar-benar terhapus.
+$router->post('/laporan', function () {
+    $html = __DIR__ . '/../public/views/laporan.php';
+    if (file_exists($html)) {
+        require_once $html;
+    } else {
+        http_response_code(404);
+        header('Content-Type: application/json');
+        echo json_encode(['error' => 'Halaman laporan tidak ditemukan.']);
     }
 });
 
