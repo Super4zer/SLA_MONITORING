@@ -1,20 +1,20 @@
 <?php
 if (getenv('DB_HOST') === false) {
-    $envPath = dirname(__DIR__, 2) . '/.env';
-    if (file_exists($envPath)) {
-        $lines = file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-        foreach ($lines as $line) {
-            $line = trim($line);
-            if ($line === '' || strpos($line, '#') === 0 || strpos($line, '=') === false) {
-                continue;
-            }
-            list($key, $value) = array_map('trim', explode('=', $line, 2));
-            if (getenv($key) === false) {
-                putenv("{$key}={$value}");
-                $_ENV[$key] = $value;
-            }
-        }
+  $envPath = dirname(__DIR__, 2) . '/.env';
+  if (file_exists($envPath)) {
+    $lines = file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($lines as $line) {
+      $line = trim($line);
+      if ($line === '' || strpos($line, '#') === 0 || strpos($line, '=') === false) {
+        continue;
+      }
+      list($key, $value) = array_map('trim', explode('=', $line, 2));
+      if (getenv($key) === false) {
+        putenv("{$key}={$value}");
+        $_ENV[$key] = $value;
+      }
     }
+  }
 }
 
 $DB_HOST = getenv('DB_HOST') ?: '127.0.0.1';
@@ -24,46 +24,46 @@ $DB_USER = getenv('DB_USER') ?: 'root';
 $DB_PASS = getenv('DB_PASS') ?: '';
 
 try {
-    $pdo = new PDO(
-        "mysql:host={$DB_HOST};port={$DB_PORT};dbname={$DB_NAME};charset=utf8mb4",
-        $DB_USER,
-        $DB_PASS,
-        [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]
-    );
+  $pdo = new PDO(
+    "mysql:host={$DB_HOST};port={$DB_PORT};dbname={$DB_NAME};charset=utf8mb4",
+    $DB_USER,
+    $DB_PASS,
+    [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]
+  );
 } catch (PDOException $e) {
-    if (isset($_GET['action'])) {
-        header('Content-Type: application/json');
-        echo json_encode(['error' => 'Koneksi database gagal: ' . $e->getMessage()]);
-        exit;
-    }
-    die('Koneksi database gagal: ' . $e->getMessage());
+  if (isset($_GET['action'])) {
+    header('Content-Type: application/json');
+    echo json_encode(['error' => 'Koneksi database gagal: ' . $e->getMessage()]);
+    exit;
+  }
+  die('Koneksi database gagal: ' . $e->getMessage());
 }
 
 
 if (isset($_GET['action'])) {
-    header('Content-Type: application/json');
+  header('Content-Type: application/json');
 
-    $action = $_GET['action'];
+  $action = $_GET['action'];
 
-    if ($action === 'range') {
-        $view = $_GET['view'] ?? 'month';
-        $refDate = new DateTime($_GET['date'] ?? 'now');
+  if ($action === 'range') {
+    $view = $_GET['view'] ?? 'month';
+    $refDate = new DateTime($_GET['date'] ?? 'now');
 
-        if ($view === 'week') {
-            $start = clone $refDate;
-            $start->modify('monday this week');
-            $end = clone $start;
-            $end->modify('+6 days');
-        } elseif ($view === 'year') {
-            $start = new DateTime($refDate->format('Y') . '-01-01');
-            $end = new DateTime($refDate->format('Y') . '-12-31');
-        } else { // month
-            $start = new DateTime($refDate->format('Y-m-01'));
-            $end = clone $start;
-            $end->modify('last day of this month');
-        }
+    if ($view === 'week') {
+      $start = clone $refDate;
+      $start->modify('monday this week');
+      $end = clone $start;
+      $end->modify('+6 days');
+    } elseif ($view === 'year') {
+      $start = new DateTime($refDate->format('Y') . '-01-01');
+      $end = new DateTime($refDate->format('Y') . '-12-31');
+    } else { // month
+      $start = new DateTime($refDate->format('Y-m-01'));
+      $end = clone $start;
+      $end->modify('last day of this month');
+    }
 
-        $sql = "SELECT
+    $sql = "SELECT
                       DATE(time_received) AS tgl,
                       SUM(CASE WHEN status_sla = 'MERAH' THEN 1 ELSE 0 END) AS red,
                       SUM(CASE WHEN status_sla = 'HIJAU' THEN 1 ELSE 0 END) AS green
@@ -72,34 +72,34 @@ if (isset($_GET['action'])) {
                   GROUP BY DATE(time_received)
                   ORDER BY tgl ASC";
 
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute([
-            ':start' => $start->format('Y-m-d'),
-            ':end' => $end->format('Y-m-d'),
-        ]);
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([
+      ':start' => $start->format('Y-m-d'),
+      ':end' => $end->format('Y-m-d'),
+    ]);
 
-        $rows = $stmt->fetchAll();
-        $data = [];
-        foreach ($rows as $r) {
-            $data[$r['tgl']] = [
-                'red' => (int) $r['red'],
-                'green' => (int) $r['green'],
-                'total' => (int) $r['red'] + (int) $r['green'],
-            ];
-        }
-
-        echo json_encode([
-            'start' => $start->format('Y-m-d'),
-            'end' => $end->format('Y-m-d'),
-            'data' => $data,
-        ]);
-        exit;
+    $rows = $stmt->fetchAll();
+    $data = [];
+    foreach ($rows as $r) {
+      $data[$r['tgl']] = [
+        'red' => (int) $r['red'],
+        'green' => (int) $r['green'],
+        'total' => (int) $r['red'] + (int) $r['green'],
+      ];
     }
 
-    if ($action === 'detail') {
-        $date = $_GET['date'] ?? date('Y-m-d');
+    echo json_encode([
+      'start' => $start->format('Y-m-d'),
+      'end' => $end->format('Y-m-d'),
+      'data' => $data,
+    ]);
+    exit;
+  }
 
-        $sql = "SELECT
+  if ($action === 'detail') {
+    $date = $_GET['date'] ?? date('Y-m-d');
+
+    $sql = "SELECT
                       m.client_phone,
                       m.message_content,
                       m.time_received,
@@ -113,54 +113,28 @@ if (isset($_GET['action'])) {
                   WHERE DATE(m.time_received) = :date
                   ORDER BY m.time_received ASC";
 
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute([':date' => $date]);
-        $rows = $stmt->fetchAll();
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([':date' => $date]);
+    $rows = $stmt->fetchAll();
 
-        $items = array_map(function ($r) {
-            return [
-                'phone' => $r['client_phone'],
-                'msg' => $r['message_content'] !== '' ? $r['message_content'] : '(pesan kosong)',
-                'received' => $r['time_received'],
-                'responded' => $r['time_responded'],
-                'seconds' => $r['sla_seconds'] !== null ? (int) $r['sla_seconds'] : null,
-                'status' => $r['status_sla'] === 'MERAH' ? 'red' : ($r['status_sla'] === 'HIJAU' ? 'green' : 'yellow'),
-                'staff' => $r['staff_name'] ?? '-',
-            ];
-        }, $rows);
+    $items = array_map(function ($r) {
+      return [
+        'phone' => $r['client_phone'],
+        'msg' => $r['message_content'] !== '' ? $r['message_content'] : '(pesan kosong)',
+        'received' => $r['time_received'],
+        'responded' => $r['time_responded'],
+        'seconds' => $r['sla_seconds'] !== null ? (int) $r['sla_seconds'] : null,
+        'status' => $r['status_sla'] === 'MERAH' ? 'red' : ($r['status_sla'] === 'HIJAU' ? 'green' : 'yellow'),
+        'staff' => $r['staff_name'] ?? '-',
+      ];
+    }, $rows);
 
-        echo json_encode(['date' => $date, 'items' => $items]);
-        exit;
-    }
-
-  if ($action === 'delete') {
-        // Mengambil parameter dari URL (GET), bukan dari payload JSON (POST)
-        $months = isset($_GET['months']) ? (int) $_GET['months'] : 0;
-
-        if ($months < 1 || $months > 12) {
-            echo json_encode(['error' => 'Pilih rentang 1-12 bulan']);
-            exit;
-        }
-
-        try {
-            // Kueri ini akan mengeksekusi penghapusan seluruh data
-            // yang waktu masuknya (time_received) lebih lama dari X bulan ke belakang.
-            $stmt = $pdo->prepare("
-                DELETE FROM ts_sla_monitoring
-                WHERE time_received < (NOW() - INTERVAL :months MONTH)
-            ");
-            $stmt->bindValue(':months', $months, PDO::PARAM_INT);
-            $stmt->execute();
-
-            echo json_encode(['deleted' => $stmt->rowCount()]);
-        } catch (PDOException $e) {
-            echo json_encode(['error' => 'Gagal menghapus data: ' . $e->getMessage()]);
-        }
-        exit;
-    }
-
-    echo json_encode(['error' => 'Aksi tidak dikenal']);
+    echo json_encode(['date' => $date, 'items' => $items]);
     exit;
+  }
+
+  echo json_encode(['error' => 'Aksi tidak dikenal']);
+  exit;
 }
 
 // Aksi hapus log (mutasi data) hanya boleh lewat POST, terpisah dari
@@ -244,227 +218,51 @@ function buildDeleteWhereClause(string $period, array $values): ?array
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
-    <link rel="stylesheet" href="/css/laporan.css" />
-
-    <style>
-    /* Custom Notification Panel (disamakan dengan grub.php) */
-    .cmd-notification {
-        position: fixed;
-        top: 30px;
-        right: -400px;
-        width: 320px;
-        background-color: #1c1c24;
-        border-radius: 12px;
-        padding: 16px 20px;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-        display: flex;
-        align-items: center;
-        gap: 16px;
-        z-index: 9999;
-        transition: right 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        border-left: 4px solid transparent;
-    }
-
-    .cmd-notification.show {
-        right: 30px;
-    }
-
-    .cmd-notification.success {
-        border-left-color: #ccff00;
-    }
-
-    .cmd-notification.error {
-        border-left-color: #f43f5e;
-    }
-
-    .cmd-notif-icon {
-        font-size: 28px;
-    }
-
-    .cmd-notification.success .cmd-notif-icon {
-        color: #ccff00;
-    }
-
-    .cmd-notification.error .cmd-notif-icon {
-        color: #f43f5e;
-    }
-
-    .cmd-notif-content {
-        display: flex;
-        flex-direction: column;
-    }
-
-    .cmd-notif-title {
-        color: #ffffff;
-        font-weight: 600;
-        font-size: 14px;
-        margin-bottom: 2px;
-    }
-
-    .cmd-notif-msg {
-        color: #8b8b99;
-        font-size: 12px;
-        line-height: 1.4;
-    }
-
-    /* ==========================================================
-       RAPIKAN LAYOUT (tidak mengubah warna, hanya susunan/spacing)
-       ========================================================== */
-
-    /* Header halaman */
-    .topbar .m-0.text-secondary {
-        margin-top: 2px !important;
-    }
-
-    /* Bar kontrol: dijadikan satu "toolbar card" biar rapi & tidak nempel */
-    .toolbar-card {
-        background: #ffffff;
-        border-radius: 14px;
-        padding: 14px 18px;
-        margin-bottom: 24px;
-        box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        justify-content: space-between;
-        gap: 14px;
-    }
-
-    .toolbar-left {
-        display: flex;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 14px;
-    }
-
-    .toolbar-right {
-        display: flex;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 14px;
-        margin-left: auto;
-    }
-
-    /* Legend dirapikan jadi satu grup dengan pemisah tipis */
-    .legend-group {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-        padding-right: 14px;
-        border-right: 1px solid #ecebf1;
-    }
-
-    @media (max-width: 991.98px) {
-        .legend-group {
-            border-right: none;
-            padding-right: 0;
-        }
-    }
-
-    .legend-item {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 12.5px;
-        color: #6b6b78;
-        white-space: nowrap;
-    }
-
-    /* Zona berbahaya (hapus data lama) dipisahkan visual agar tidak tertukar aksi biasa */
-    .danger-zone {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        background: rgba(244, 63, 94, 0.06);
-        border: 1px solid rgba(244, 63, 94, 0.18);
-        padding: 6px 10px;
-        border-radius: 10px;
-    }
-
-    .danger-zone-label {
-        font-size: 11.5px;
-        font-weight: 600;
-        color: #f43f5e;
-        text-transform: uppercase;
-        letter-spacing: 0.02em;
-        white-space: nowrap;
-        padding-left: 2px;
-    }
-
-    .danger-zone #delete-months {
-        border-radius: 8px;
-        font-size: 13px;
-    }
-
-    .danger-zone #btn-delete-old {
-        font-weight: 600;
-        border: 1px solid rgba(244, 63, 94, 0.35) !important;
-    }
-
-    /* Kartu kalender & panel detail: judul section lebih tegas */
-    .section-card-title {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 16px;
-        padding-bottom: 12px;
-        border-bottom: 1px solid #ecebf1;
-    }
-
-    .section-card-title h6 {
-        margin: 0;
-        font-weight: 700;
-        font-size: 15px;
-        color: #1c1c24;
-    }
-
-    /* Panel detail: beri tinggi konsisten & scroll agar tidak "mendorong" layout */
-    #detail-area {
-        max-height: 560px;
-        overflow-y: auto;
-        padding-right: 4px;
-    }
-
-    #detail-area::-webkit-scrollbar {
-        width: 6px;
-    }
-
-    #detail-area::-webkit-scrollbar-thumb {
-        background: #e2e2ea;
-        border-radius: 6px;
-    }
-
-    /* Responsif: di layar kecil, toolbar kanan full width & rapi ke bawah */
-    @media (max-width: 767.98px) {
-        .toolbar-card {
-            flex-direction: column;
-            align-items: stretch;
-        }
-
-        .toolbar-left,
-        .toolbar-right {
-            width: 100%;
-            justify-content: flex-start;
-        }
-
-        .danger-zone {
-            width: 100%;
-            justify-content: space-between;
-        }
-    }
-    </style>
+    <link rel="stylesheet" href="/css/laporan.css">
 </head>
 
 <body>
-    <div id="cmdNotification" class="cmd-notification">
-        <span class="material-symbols-outlined cmd-notif-icon" id="cmdNotifIcon">check_circle</span>
-        <div class="cmd-notif-content">
-            <span class="cmd-notif-title" id="cmdNotifTitle">Berhasil</span>
-            <span class="cmd-notif-msg" id="cmdNotifMsg">Pesan di sini.</span>
-        </div>
-    </div>
-
     <div class="d-flex h-100 w-100">
+        <aside class="sidebar d-none d-lg-flex">
+            <div class="sidebar-brand">
+                <span class="fw-bold text-white fs-4 d-flex justify-content-center align-items-center">
+                    <img src="/images/DSI.png" alt="DSI Logo" width="auto" height="180px" class="mt-3" />
+                </span>
+            </div>
+
+            <nav class="nav-sidebar flex-grow-1">
+                <a href="/dashboard" class="nav-link">
+                    <span class="material-symbols-outlined fs-5">grid_view</span>
+                    Dashboard
+                </a>
+                <a href="/grub" class="nav-link">
+                    <span class="material-symbols-outlined fs-5">confirmation_number</span>
+                    Tambah Grub
+                </a>
+                <a href="/agen-cs" class="nav-link">
+                    <span class="material-symbols-outlined fs-5">support_agent</span>
+                    Agent CS
+                </a>
+                <a href="/laporan" class="nav-link active">
+                    <span class="material-symbols-outlined fs-5">bar_chart</span>
+                    Laporan Kinerja
+                </a>
+
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="avatar">
+                    <span class="material-symbols-outlined fs-6">person</span>
+                </div>
+                <div class="user-info">
+                    <p>Admin DSI</p>
+                    <span>Administrator</span>
+                </div>
+                <a href="#" class="ms-auto text-secondary"><span
+                        class="material-symbols-outlined fs-5">logout</span></a>
+            </div>
+        </aside>
+
         <div class="main-wrapper">
             <header class="topbar">
                 <div>
@@ -544,9 +342,7 @@ function buildDeleteWhereClause(string $period, array $values): ?array
                         <div class="d-flex gap-3">
                             <div class="legend-item"><span class="dot-indicator bg-completed"></span> Tepat waktu</div>
                             <div class="legend-item"><span class="dot-indicator bg-overdue"></span> Terlambat</div>
-
                         </div>
-
                         <div class="range-nav">
                             <button id="btn-prev"><span
                                     class="material-symbols-outlined fs-6">chevron_left</span></button>
@@ -554,7 +350,6 @@ function buildDeleteWhereClause(string $period, array $values): ?array
                             <button id="btn-next"><span
                                     class="material-symbols-outlined fs-6">chevron_right</span></button>
                         </div>
-
                         <button class="btn-today" id="btn-today">Hari ini</button>
                         <button class="btn-hapus-chat" id="btn-toggle-delete">
                             <span class="material-symbols-outlined fs-6">delete</span>
@@ -576,35 +371,12 @@ function buildDeleteWhereClause(string $period, array $values): ?array
                             Hapus
                         </button>
                     </div>
-
-                    <div class="toolbar-right">
-                        <div class="legend-group">
-                            <div class="legend-item"><span class="dot-indicator bg-completed"></span> Tepat waktu
-                            </div>
-                            <div class="legend-item"><span class="dot-indicator bg-overdue"></span> Terlambat &gt;3
-                                menit</div>
-                        </div>
-
-                        <div class="danger-zone">
-                            <span class="danger-zone-label">Hapus data</span>
-                            <select id="delete-months" class="form-select form-select-sm" style="width: auto;">
-                                <option value="1">&gt; 1 bulan</option>
-                                <option value="3">&gt; 3 bulan</option>
-                                <option value="6">&gt; 6 bulan</option>
-                                <option value="12">&gt; 12 bulan</option>
-                            </select>
-                            <button id="btn-delete-old" class="btn-today" style="color:#f43f5e;">Hapus</button>
-                        </div>
-                    </div>
                 </div>
 
                 <!-- CALENDAR + DETAIL -->
                 <div class="row g-4">
                     <div class="col-lg-8">
                         <div class="dashboard-card">
-                            <div class="section-card-title">
-                                <h6>Kalender SLA</h6>
-                            </div>
                             <div id="calendar-area">
                                 <div class="text-center text-secondary py-5">Memuat data...</div>
                             </div>
@@ -612,9 +384,7 @@ function buildDeleteWhereClause(string $period, array $values): ?array
                     </div>
                     <div class="col-lg-4">
                         <div class="dashboard-card">
-                            <div class="section-card-title">
-                                <h6 id="detail-title">Detail Hari</h6>
-                            </div>
+                            <h6 class="fw-bold mb-3" id="detail-title">Detail Hari</h6>
                             <div id="detail-area">
                                 <div class="detail-empty">
                                     <span class="material-symbols-outlined">touch_app</span>
@@ -659,39 +429,6 @@ function buildDeleteWhereClause(string $period, array $values): ?array
         document.getElementById("live-clock").innerHTML =
             `<span class="material-symbols-outlined fs-6">schedule</span> ${time}`;
     }, 1000);
-
-    /* ========================================================
-      1b. CUSTOM NOTIFICATION (disamakan dengan grub.php)
-    ======================================================== */
-    let notifTimeout;
-
-    function showCmdNotification(title, message, type = 'success') {
-        const notifBox = document.getElementById('cmdNotification');
-        const notifIcon = document.getElementById('cmdNotifIcon');
-        const notifTitle = document.getElementById('cmdNotifTitle');
-        const notifMsg = document.getElementById('cmdNotifMsg');
-
-        notifBox.className = 'cmd-notification';
-        clearTimeout(notifTimeout);
-
-        if (type === 'success') {
-            notifBox.classList.add('success');
-            notifIcon.textContent = 'check_circle';
-        } else {
-            notifBox.classList.add('error');
-            notifIcon.textContent = 'error';
-        }
-
-        notifTitle.textContent = title;
-        notifMsg.textContent = message;
-
-        setTimeout(() => {
-            notifBox.classList.add('show');
-        }, 50);
-        notifTimeout = setTimeout(() => {
-            notifBox.classList.remove('show');
-        }, 3500);
-    }
 
     /* ========================================================
       2. KONSTANTA & HELPER
@@ -1020,40 +757,6 @@ function buildDeleteWhereClause(string $period, array $values): ?array
     document.getElementById("btn-today").addEventListener("click", () => {
         refDate = new Date();
         render();
-    });
-    /* ========================================================
-              10. DELETE DATA LAMA
-            ======================================================== */
-    document.getElementById("btn-delete-old").addEventListener("click", async () => {
-        const months = document.getElementById("delete-months").value;
-        const confirmMsg =
-            `Peringatan: Kamu akan menghapus SELURUH histori chat yang lebih lama dari ${months} bulan. Tindakan ini tidak bisa dibatalkan. Lanjutkan?`;
-
-        if (!confirm(confirmMsg)) return;
-
-        try {
-            // Mengubah fetch ke metode GET dan menyisipkan parameter 'months' ke dalam URL
-            const res = await fetch(`?action=delete&months=${months}`);
-
-            // Pengecekan jika response dari server bukan JSON (misal error HTML)
-            if (!res.ok) {
-                throw new Error(`HTTP error! status: ${res.status}`);
-            }
-
-            const json = await res.json();
-
-            if (json.error) {
-                showCmdNotification('Gagal Hapus', json.error, 'error');
-                return;
-            }
-
-            showCmdNotification('Data Dihapus', `${json.deleted} data berhasil dihapus.`, 'success');
-            render(); // Memuat ulang kalender dan statistik secara otomatis
-        } catch (err) {
-            showCmdNotification('Error Jaringan', 'Terjadi kesalahan saat menghubungi server: ' + err
-                .message, 'error');
-            console.error(err);
-        }
     });
 
     // Render awal

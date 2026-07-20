@@ -37,7 +37,6 @@ $router->get('/grub', function () {
     $html = __DIR__ . '/../public/views/grub.php';
     if (file_exists($html)) {
         header('Content-Type: text/html');
-        require_once $html;
     } else {
         http_response_code(404);
         echo "Grub management page not found.";
