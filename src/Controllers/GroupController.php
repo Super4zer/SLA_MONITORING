@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Controllers;
 
 use App\Models\GroupWhitelistModel;
@@ -17,7 +18,7 @@ class GroupController
     {
         header('Content-Type: application/json');
         $data = $this->groupModel->getAllGroups();
-        
+
         echo json_encode([
             'status' => 'success',
             'data' => $data
@@ -25,13 +26,13 @@ class GroupController
         exit;
     }
 
-   public function storeGroup(): void
+    public function storeGroup(): void
     {
         header('Content-Type: application/json');
-        
+
         try {
             $input = json_decode(file_get_contents('php://input'), true);
-            
+
             $groupId = $input['group_id'] ?? '';
             $groupName = $input['group_name'] ?? '';
 
@@ -49,7 +50,6 @@ class GroupController
                 http_response_code(500);
                 echo json_encode(['status' => 'error', 'message' => 'Gagal mengeksekusi query database']);
             }
-
         } catch (\Throwable $th) {
             http_response_code(500);
             echo json_encode([
@@ -60,52 +60,51 @@ class GroupController
         }
         exit;
     }
+    public function updateGroup(): void
+    {
+        header('Content-Type: application/json');
+        $input = json_decode(file_get_contents('php://input'), true);
 
-public function updateGroup(): void
-{
-    header('Content-Type: application/json');
-    $input = json_decode(file_get_contents('php://input'), true);
-    
-    $id = isset($input['id']) ? (int)$input['id'] : 0;
-    $groupId = $input['group_id'] ?? '';
-    $groupName = $input['group_name'] ?? '';
+        $id = isset($input['id']) ? (int)$input['id'] : 0;
+        $groupId = $input['group_id'] ?? '';
+        $groupName = $input['group_name'] ?? '';
 
-    if ($id <= 0 || empty($groupId) || empty($groupName)) {
-        http_response_code(400);
-        echo json_encode(['status' => 'error', 'message' => 'Parameter tidak valid untuk update']);
+        if ($id <= 0 || empty($groupId) || empty($groupName)) {
+            http_response_code(400);
+            echo json_encode(['status' => 'error', 'message' => 'Parameter tidak valid untuk update']);
+            exit;
+        }
+
+        $success = $this->groupModel->updateGroup($id, $groupId, $groupName);
+        if ($success) {
+            echo json_encode(['status' => 'success', 'message' => 'Data grup sukses diperbarui']);
+        } else {
+            http_response_code(500);
+            echo json_encode(['status' => 'error', 'message' => 'Gagal mengubah data ke database']);
+        }
         exit;
     }
 
-    $success = $this->groupModel->updateGroup($id, $groupId, $groupName);
-    if ($success) {
-        echo json_encode(['status' => 'success', 'message' => 'Data grup sukses diperbarui']);
-    } else {
-        http_response_code(500);
-        echo json_encode(['status' => 'error', 'message' => 'Gagal mengubah data ke database']);
-    }
-    exit;
-}
+    public function deleteGroup(): void
+    {
+        header('Content-Type: application/json');
+        $input = json_decode(file_get_contents('php://input'), true);
 
-public function deleteGroup(): void
-{
-    header('Content-Type: application/json');
-    $input = json_decode(file_get_contents('php://input'), true);
-    
-    $id = isset($input['id']) ? (int)$input['id'] : 0;
+        $id = isset($input['id']) ? (int)$input['id'] : 0;
 
-    if ($id <= 0) {
-        http_response_code(400);
-        echo json_encode(['status' => 'error', 'message' => 'ID tidak ditemukan']);
+        if ($id <= 0) {
+            http_response_code(400);
+            echo json_encode(['status' => 'error', 'message' => 'ID tidak ditemukan']);
+            exit;
+        }
+
+        $success = $this->groupModel->deleteGroup($id);
+        if ($success) {
+            echo json_encode(['status' => 'success', 'message' => 'Data grup berhasil dihapus']);
+        } else {
+            http_response_code(500);
+            echo json_encode(['status' => 'error', 'message' => 'Gagal menghapus data dari database']);
+        }
         exit;
     }
-
-    $success = $this->groupModel->deleteGroup($id);
-    if ($success) {
-        echo json_encode(['status' => 'success', 'message' => 'Data grup berhasil dihapus']);
-    } else {
-        http_response_code(500);
-        echo json_encode(['status' => 'error', 'message' => 'Gagal menghapus data dari database']);
-    }
-    exit;
-}
 }

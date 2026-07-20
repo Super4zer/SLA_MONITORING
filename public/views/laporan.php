@@ -239,7 +239,7 @@ function buildDeleteWhereClause(string $period, array $values): ?array
                     <span class="material-symbols-outlined fs-5">confirmation_number</span>
                     Tambah Grub
                 </a>
-                  <a href="/agen-cs" class="nav-link">
+                <a href="/agen-cs" class="nav-link">
                     <span class="material-symbols-outlined fs-5">support_agent</span>
                     Agent CS
                 </a>
@@ -807,9 +807,10 @@ function buildDeleteWhereClause(string $period, array $values): ?array
         selectionMode = forceOff ? false : !selectionMode;
         selectedKeys.clear();
         btnToggleDelete.classList.toggle("active", selectionMode);
-        btnToggleDelete.innerHTML = selectionMode
-            ? '<span class="material-symbols-outlined fs-6">close</span> Batal Pilih'
-            : '<span class="material-symbols-outlined fs-6">delete</span> Hapus Chat';
+
+        btnToggleDelete.innerHTML = selectionMode ?
+            '<span class="material-symbols-outlined fs-6">close</span> Batal Pilih' :
+            '<span class="material-symbols-outlined fs-6">delete</span> Hapus Chat';
         selectionBar.classList.toggle("d-none", !selectionMode);
         updateSelectionBar();
         render();
@@ -898,7 +899,21 @@ function buildDeleteWhereClause(string $period, array $values): ?array
         try {
             const res = await fetch("", {
                 method: "POST",
-                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                <<
+                <<
+                << < HEAD
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                ===
+                ===
+                =
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                >>>
+                >>>
+                > ridho
                 body: `action=delete&period=${period}&values=${encodeURIComponent(values)}`,
             });
             const json = await res.json();
@@ -915,8 +930,15 @@ function buildDeleteWhereClause(string $period, array $values): ?array
             selectionCount.textContent = "Gagal menghapus log. Coba lagi.";
             btnSelectionDelete.disabled = false;
         }
-    });
+    }); <<
+    <<
+    << < HEAD
 
+        ===
+        ===
+        = >>>
+        >>>
+        > ridho
     </script>
 </body>
 

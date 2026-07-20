@@ -17,46 +17,6 @@
 
 <body>
     <div class="d-flex h-100 w-100">
-        <aside class="sidebar d-none d-lg-flex">
-            <div class="sidebar-brand">
-                <span class="fw-bold text-white fs-4 d-flex justify-content-center align-items-center">
-                    <img src="/images/DSI.png" alt="" width="auto" height="180px" class="mt-3" />
-                </span>
-            </div>
-
-            <nav class="nav-sidebar flex-grow-1">
-                <a href="/dashboard" class="nav-link active">
-                    <span class="material-symbols-outlined fs-5">grid_view</span>
-                    Dashboard
-                </a>
-                <a href="/grub" class="nav-link">
-                    <span class="material-symbols-outlined fs-5">confirmation_number</span>
-                    Tambah Grub
-                </a>
-                 <a href="/agen-cs" class="nav-link">
-                    <span class="material-symbols-outlined fs-5">support_agent</span>
-                    Agent CS
-                </a>
-                <a href="/laporan" class="nav-link">
-                    <span class="material-symbols-outlined fs-5">bar_chart</span>
-                    Laporan Kinerja
-                </a>
-
-            </nav>
-
-            <div class="sidebar-footer">
-                <div class="avatar">
-                    <span class="material-symbols-outlined fs-6">person</span>
-                </div>
-                <div class="user-info">
-                    <p>Admin DSI</p>
-                    <span>Administrator</span>
-                </div>
-                <a href="#" class="ms-auto text-secondary"><span
-                        class="material-symbols-outlined fs-5">logout</span></a>
-            </div>
-        </aside>
-
         <div class="main-wrapper">
             <header class="topbar">
                 <div>
@@ -153,11 +113,14 @@
     </div>
 
     <!-- Modal Detail balasan CS (vanilla, tidak butuh Bootstrap JS) -->
-    <div id="detail-modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(15,15,20,0.55); z-index:1050; align-items:center; justify-content:center;">
-        <div style="background:#fff; border-radius:14px; width:100%; max-width:480px; margin:16px; padding:24px; box-shadow:0 20px 50px rgba(0,0,0,0.25);">
+    <div id="detail-modal-overlay"
+        style="display:none; position:fixed; inset:0; background:rgba(15,15,20,0.55); z-index:1050; align-items:center; justify-content:center;">
+        <div
+            style="background:#fff; border-radius:14px; width:100%; max-width:480px; margin:16px; padding:24px; box-shadow:0 20px 50px rgba(0,0,0,0.25);">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h5 class="m-0 fw-bold text-dark">Detail Komplain</h5>
-                <button onclick="hideDetailModal()" style="border:none; background:none; font-size:20px; line-height:1; cursor:pointer;">&times;</button>
+                <button onclick="hideDetailModal()"
+                    style="border:none; background:none; font-size:20px; line-height:1; cursor:pointer;">&times;</button>
             </div>
 
             <div class="mb-3">
@@ -194,54 +157,54 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.3/purify.min.js"></script>
 
     <script>
-        // 1. Clock (backup, app.js juga mengelola ini)
-        if (!document.getElementById("live-clock").textContent.includes(":")) {
-            setInterval(() => {
-                const now = new Date();
-                const time = now.toLocaleTimeString("id-ID", {
-                    hour12: false
-                });
-                document.getElementById("live-clock").innerHTML =
-                    `<span class="material-symbols-outlined fs-6">schedule</span> ${time}`;
-            }, 1000);
-        }
+    // 1. Clock (backup, app.js juga mengelola ini)
+    if (!document.getElementById("live-clock").textContent.includes(":")) {
+        setInterval(() => {
+            const now = new Date();
+            const time = now.toLocaleTimeString("id-ID", {
+                hour12: false
+            });
+            document.getElementById("live-clock").innerHTML =
+                `<span class="material-symbols-outlined fs-6">schedule</span> ${time}`;
+        }, 1000);
+    }
 
-        // 2. Chart.js Inisialisasi (Lingkaran Sempurna)
-        const ctx = document.getElementById("slaChart").getContext("2d");
-        const slaChart = new Chart(ctx, {
-            type: "pie",
-            data: {
-                labels: ["Menunggu", "Terlambat", "Selesai"],
-                datasets: [{
-                    data: [0, 0, 0],
-                    backgroundColor: ["#10b981", "#f43f5e", "#10b981"],
-                    borderWidth: 0,
-                    hoverOffset: 6,
-                }, ],
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    },
-                    tooltip: {
-                        backgroundColor: "#1c1c24",
-                        padding: 10,
-                        cornerRadius: 8,
-                        displayColors: false,
-                    },
+    // 2. Chart.js Inisialisasi (Lingkaran Sempurna)
+    const ctx = document.getElementById("slaChart").getContext("2d");
+    const slaChart = new Chart(ctx, {
+        type: "pie",
+        data: {
+            labels: ["Menunggu", "Terlambat", "Selesai"],
+            datasets: [{
+                data: [0, 0, 0],
+                backgroundColor: ["#10b981", "#f43f5e", "#10b981"],
+                borderWidth: 0,
+                hoverOffset: 6,
+            }, ],
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    backgroundColor: "#1c1c24",
+                    padding: 10,
+                    cornerRadius: 8,
+                    displayColors: false,
                 },
             },
-        });
+        },
+    });
 
-        // 3. Dipanggil langsung dari app.js tiap kali data / timer berubah,
-        // jadi tidak perlu lagi MutationObserver.
-        window.updateSlaChart = function(onTime, late, completed) {
-            slaChart.data.datasets[0].data = [onTime, late, completed];
-            slaChart.update();
-        };
+    // 3. Dipanggil langsung dari app.js tiap kali data / timer berubah,
+    // jadi tidak perlu lagi MutationObserver.
+    window.updateSlaChart = function(onTime, late, completed) {
+        slaChart.data.datasets[0].data = [onTime, late, completed];
+        slaChart.update();
+    };
     </script>
 
     <script src="/js/api.js"></script>
