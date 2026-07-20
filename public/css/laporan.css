@@ -1,0 +1,750 @@
+body {
+  font-family: "Inter", sans-serif;
+  background-color: #f2f3f7;
+  color: #1e1e2d;
+  overflow: hidden;
+  height: 100vh;
+}
+
+/* ================= SIDEBAR (DARK THEME) ================= */
+.sidebar {
+  width: 250px;
+  flex-shrink: 0;
+  /* 🔒 kunci lebar sidebar, jangan pernah menyusut */
+  background-color: #1c1c24;
+  display: flex;
+  flex-direction: column;
+  z-index: 1010;
+  transition: all 0.3s;
+}
+
+.sidebar-brand {
+  height: 80px;
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+}
+
+.sidebar-brand img {
+  max-width: 140px;
+}
+
+.nav-sidebar {
+  margin-top: 10px;
+}
+
+.nav-sidebar .nav-link {
+  color: #8b8b99;
+  font-weight: 500;
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 14px;
+  border-left: 3px solid transparent;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.nav-sidebar .nav-link:hover {
+  color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+/* Gaya Aktif (Neon Green Accent) */
+.nav-sidebar .nav-link.active {
+  color: #ffffff;
+  border-left: 3px solid #ccff00;
+  background: linear-gradient(
+    90deg,
+    rgba(204, 255, 0, 0.05) 0%,
+    transparent 100%
+  );
+  font-weight: 600;
+}
+
+.nav-sidebar .nav-link.active .material-symbols-outlined {
+  color: #ccff00;
+}
+
+/* Sidebar Footer (User Profile) */
+.sidebar-footer {
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.sidebar-footer .avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: #3b3b45;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.sidebar-footer .user-info p {
+  margin: 0;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.sidebar-footer .user-info span {
+  color: #8b8b99;
+  font-size: 11px;
+}
+
+/* ================= MAIN CONTENT ================= */
+.main-wrapper {
+  flex-grow: 1;
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.topbar {
+  height: 80px;
+  background-color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+  flex-shrink: 0;
+}
+
+.main-content {
+  flex-grow: 1;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  padding: 0 32px 32px 32px;
+}
+
+.tabular-clock {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: #8b8b99;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ================= CARDS ================= */
+.dashboard-card {
+  background: #ffffff;
+  border: none;
+  border-radius: 16px;
+  box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.03);
+  padding: 24px;
+  height: 100%;
+}
+
+.stat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.stat-title {
+  color: #8b8b99;
+  font-size: 13px;
+  font-weight: 500;
+  margin: 0;
+}
+
+.stat-icon-small {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stat-value {
+  font-size: 30px;
+  font-weight: 700;
+  color: #1e1e2d;
+  margin: 0;
+  line-height: 1;
+}
+
+.stat-sub {
+  font-size: 12px;
+  color: #a1a1aa;
+  margin-top: 4px;
+}
+
+.bg-waiting {
+  background-color: #f59e0b;
+}
+
+.bg-overdue {
+  background-color: #f43f5e;
+}
+
+.bg-completed {
+  background-color: #10b981;
+}
+
+.text-waiting {
+  color: #f59e0b;
+}
+
+.text-overdue {
+  color: #f43f5e;
+}
+
+.text-completed {
+  color: #10b981;
+}
+
+.dot-indicator {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 8px;
+}
+
+/* ============ VIEW SWITCH ============ */
+.view-switch {
+  display: inline-flex;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 4px;
+  box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.03);
+  gap: 4px;
+}
+
+.view-switch button {
+  border: none;
+  background: transparent;
+  color: #8b8b99;
+  font-weight: 600;
+  font-size: 13px;
+  padding: 8px 18px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.view-switch button.active {
+  background-color: #1c1c24;
+  color: #ccff00;
+}
+
+.view-switch button:hover:not(.active) {
+  color: #1e1e2d;
+}
+
+.range-nav {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.range-nav button {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid #e2e2e8;
+  background: #ffffff;
+  color: #1e1e2d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.range-nav button:hover {
+  background-color: #1c1c24;
+  color: #ccff00;
+  border-color: #1c1c24;
+}
+
+.range-label {
+  font-weight: 700;
+  font-size: 15px;
+  color: #1e1e2d;
+  min-width: 170px;
+  text-align: center;
+}
+
+.btn-today {
+  border: 1px solid #e2e2e8;
+  background: #ffffff;
+  color: #1e1e2d;
+  font-size: 12.5px;
+  font-weight: 600;
+  border-radius: 10px;
+  padding: 8px 14px;
+  transition: all 0.2s;
+}
+
+.btn-today:hover {
+  border-color: #ccff00;
+  background-color: #fbffe6;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: #646470;
+  font-weight: 500;
+}
+
+/* ============ CALENDAR: MONTH VIEW ============ */
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+}
+
+.cal-weekday {
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: #a1a1aa;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding-bottom: 8px;
+}
+
+.cal-cell {
+  position: relative;
+  border: 1px solid #f2f3f7;
+  border-radius: 12px;
+  min-height: 92px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  background: #ffffff;
+}
+
+.cal-cell:hover {
+  border-color: #ccff00;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+  transform: translateY(-1px);
+}
+
+.cal-cell.outside {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.cal-cell.outside:hover {
+  border-color: #f2f3f7;
+  box-shadow: none;
+  transform: none;
+}
+
+.cal-cell.is-today {
+  border-color: #1c1c24;
+}
+
+.cal-cell.selected {
+  border-color: #ccff00;
+  background: #fbffe6;
+}
+
+.cal-date-num {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1e1e2d;
+}
+
+.cal-badges {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.cal-badge {
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 6px;
+  padding: 2px 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  line-height: 1.4;
+}
+
+.cal-badge.red {
+  background: rgba(244, 63, 94, 0.1);
+  color: #f43f5e;
+}
+
+.cal-badge.green {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+.cal-empty {
+  font-size: 11px;
+  color: #d4d4d8;
+}
+
+/* ============ WEEK VIEW ============ */
+.week-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 12px;
+}
+
+.week-cell {
+  position: relative;
+  border: 1px solid #f2f3f7;
+  border-radius: 14px;
+  padding: 16px 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.week-cell:hover {
+  border-color: #ccff00;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+}
+
+.week-cell.selected {
+  border-color: #ccff00;
+  background: #fbffe6;
+}
+
+.week-cell .wc-day {
+  font-size: 11px;
+  font-weight: 700;
+  color: #a1a1aa;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.week-cell .wc-date {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1e1e2d;
+  margin: 6px 0 12px 0;
+}
+
+.week-cell .wc-badges {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* ============ YEAR VIEW ============ */
+.year-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+
+.year-cell {
+  position: relative;
+  border: 1px solid #f2f3f7;
+  border-radius: 14px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.year-cell:hover {
+  border-color: #ccff00;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+}
+
+.year-cell .yc-month {
+  font-weight: 700;
+  font-size: 14px;
+  color: #1e1e2d;
+  margin-bottom: 10px;
+}
+
+.yc-bar {
+  height: 8px;
+  border-radius: 4px;
+  background: #f2f3f7;
+  overflow: hidden;
+  display: flex;
+  margin-bottom: 10px;
+}
+
+.yc-bar .seg-green {
+  background: #10b981;
+  height: 100%;
+}
+
+.yc-bar .seg-red {
+  background: #f43f5e;
+  height: 100%;
+}
+
+.yc-stats {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* ============ DETAIL PANEL ============ */
+.detail-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #a1a1aa;
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.detail-empty .material-symbols-outlined {
+  font-size: 42px;
+  margin-bottom: 10px;
+  color: #d4d4d8;
+}
+
+.detail-list {
+  max-height: 480px;
+  overflow-y: auto;
+}
+
+.detail-item {
+  border-bottom: 1px solid #f2f3f7;
+  padding: 12px 2px;
+}
+
+.detail-item:last-child {
+  border-bottom: none;
+}
+
+.detail-item .di-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.detail-item .di-phone {
+  font-weight: 700;
+  font-size: 13px;
+  color: #1e1e2d;
+}
+
+.detail-item .di-msg {
+  font-size: 12.5px;
+  color: #646470;
+  margin-bottom: 4px;
+}
+
+.detail-item .di-meta {
+  font-size: 11px;
+  color: #a1a1aa;
+}
+
+.status-chip {
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 20px;
+}
+
+.status-chip.red {
+  background: rgba(244, 63, 94, 0.1);
+  color: #f43f5e;
+}
+
+.status-chip.green {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+.status-chip.yellow {
+  background: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
+}
+
+/* ============ HAPUS CHAT (toggle + seleksi langsung di kalender) ============ */
+.btn-hapus-chat {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 14px;
+  border: 1px solid #f43f5e;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #f43f5e;
+  font-weight: 600;
+  font-size: 12.5px;
+  transition: all 0.2s ease;
+}
+
+.btn-hapus-chat:hover {
+  background: rgba(244, 63, 94, 0.08);
+}
+
+.btn-hapus-chat.active {
+  background-color: #1c1c24;
+  color: #ffffff;
+  border-color: #1c1c24;
+}
+
+.selection-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #1c1c24;
+  color: #ffffff;
+  border-radius: 12px;
+  padding: 10px 18px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.selection-bar .material-symbols-outlined {
+  color: #ccff00;
+}
+
+.btn-selection-cancel {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: transparent;
+  color: #ffffff;
+  font-size: 12.5px;
+  font-weight: 600;
+  border-radius: 8px;
+  padding: 7px 14px;
+  transition: all 0.2s;
+}
+
+.btn-selection-cancel:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.btn-selection-delete {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  background-color: #f43f5e;
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 12.5px;
+  border-radius: 8px;
+  padding: 7px 14px;
+  transition: all 0.2s;
+}
+
+.btn-selection-delete:hover:not(:disabled) {
+  background-color: #e11d48;
+}
+
+.btn-selection-delete:disabled {
+  background-color: rgba(244, 63, 94, 0.35);
+  cursor: not-allowed;
+}
+
+/* Sel kalender saat mode seleksi aktif */
+.week-cell.selecting,
+.cal-cell.selecting,
+.year-cell.selecting {
+  position: relative;
+  border-color: #e2e2e8;
+}
+
+.week-cell.picked,
+.cal-cell.picked,
+.year-cell.picked {
+  border-color: #f43f5e;
+  background: rgba(244, 63, 94, 0.06);
+}
+
+.pick-check {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  font-size: 18px;
+  color: #d4d4d8;
+  z-index: 2;
+}
+
+.picked .pick-check {
+  color: #f43f5e;
+}
+
+.week-cell.selecting,
+.cal-cell.selecting {
+  position: relative;
+}
+
+/* ============ MODAL KONFIRMASI ============ */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(28, 28, 36, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.modal-box {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 28px;
+  width: 100%;
+  max-width: 380px;
+  box-shadow: 0px 12px 40px rgba(0, 0, 0, 0.15);
+  text-align: left;
+}
+
+.modal-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: rgba(244, 63, 94, 0.1);
+  color: #f43f5e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+
+.modal-box p {
+  font-size: 13px;
+  color: #646470;
+}
+
+::-webkit-scrollbar {
+  width: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #e2e2e8;
+  border-radius: 10px;
+}
