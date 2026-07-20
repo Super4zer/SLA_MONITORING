@@ -223,45 +223,6 @@ function buildDeleteWhereClause(string $period, array $values): ?array
 
 <body>
     <div class="d-flex h-100 w-100">
-        <aside class="sidebar d-none d-lg-flex">
-            <div class="sidebar-brand">
-                <span class="fw-bold text-white fs-4 d-flex justify-content-center align-items-center">
-                    <img src="/images/DSI.png" alt="DSI Logo" width="auto" height="180px" class="mt-3" />
-                </span>
-            </div>
-
-            <nav class="nav-sidebar flex-grow-1">
-                <a href="/dashboard" class="nav-link">
-                    <span class="material-symbols-outlined fs-5">grid_view</span>
-                    Dashboard
-                </a>
-                <a href="/grub" class="nav-link">
-                    <span class="material-symbols-outlined fs-5">confirmation_number</span>
-                    Tambah Grub
-                </a>
-                <a href="/agen-cs" class="nav-link">
-                    <span class="material-symbols-outlined fs-5">support_agent</span>
-                    Agent CS
-                </a>
-                <a href="/laporan" class="nav-link active">
-                    <span class="material-symbols-outlined fs-5">bar_chart</span>
-                    Laporan Kinerja
-                </a>
-
-            </nav>
-
-            <div class="sidebar-footer">
-                <div class="avatar">
-                    <span class="material-symbols-outlined fs-6">person</span>
-                </div>
-                <div class="user-info">
-                    <p>Admin DSI</p>
-                    <span>Administrator</span>
-                </div>
-                <a href="#" class="ms-auto text-secondary"><span
-                        class="material-symbols-outlined fs-5">logout</span></a>
-            </div>
-        </aside>
 
         <div class="main-wrapper">
             <header class="topbar">
