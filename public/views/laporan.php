@@ -133,30 +133,103 @@ if (isset($_GET['action'])) {
         exit;
     }
 
-    if ($action === 'delete') {
-        $input = json_decode(file_get_contents('php://input'), true);
-        $months = isset($input['months']) ? (int) $input['months'] : 0;
+  if ($action === 'delete') {
+        // Mengambil parameter dari URL (GET), bukan dari payload JSON (POST)
+        $months = isset($_GET['months']) ? (int) $_GET['months'] : 0;
 
         if ($months < 1 || $months > 12) {
             echo json_encode(['error' => 'Pilih rentang 1-12 bulan']);
             exit;
         }
 
-        // Hanya hapus yang sudah terselesaikan (sudah dijawab / ditutup lewat penjelasan)
-        $stmt = $pdo->prepare("
-      DELETE FROM ts_sla_monitoring
-      WHERE (time_responded IS NOT NULL AND (sla_seconds <= 180 OR is_resolved_by_explanation = 1))
-        AND time_received < (NOW() - INTERVAL :months MONTH)
-    ");
-        $stmt->bindValue(':months', $months, PDO::PARAM_INT);
-        $stmt->execute();
+        try {
+            // Kueri ini akan mengeksekusi penghapusan seluruh data
+            // yang waktu masuknya (time_received) lebih lama dari X bulan ke belakang.
+            $stmt = $pdo->prepare("
+                DELETE FROM ts_sla_monitoring
+                WHERE time_received < (NOW() - INTERVAL :months MONTH)
+            ");
+            $stmt->bindValue(':months', $months, PDO::PARAM_INT);
+            $stmt->execute();
 
-        echo json_encode(['deleted' => $stmt->rowCount()]);
+            echo json_encode(['deleted' => $stmt->rowCount()]);
+        } catch (PDOException $e) {
+            echo json_encode(['error' => 'Gagal menghapus data: ' . $e->getMessage()]);
+        }
         exit;
     }
 
     echo json_encode(['error' => 'Aksi tidak dikenal']);
     exit;
+}
+
+// Aksi hapus log (mutasi data) hanya boleh lewat POST, terpisah dari
+// pembacaan data lewat GET di atas supaya tidak bisa dipicu cuma dengan
+// membuka URL. Mendukung banyak tanggal/bulan sekaligus (multi-select
+// langsung dari kalender di frontend).
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delete') {
+  header('Content-Type: application/json');
+
+  $period = $_POST['period'] ?? '';
+  $valuesRaw = $_POST['values'] ?? '';
+  $values = array_values(array_filter(array_map('trim', explode(',', $valuesRaw)), fn($v) => $v !== ''));
+
+  $where = buildDeleteWhereClause($period, $values);
+  if ($where === null) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Periode atau nilai tidak valid']);
+    exit;
+  }
+
+  $stmt = $pdo->prepare("DELETE FROM ts_sla_monitoring WHERE {$where['sql']}");
+  $stmt->execute($where['params']);
+
+  echo json_encode([
+    'success' => true,
+    'deleted' => $stmt->rowCount(),
+  ]);
+  exit;
+}
+
+/**
+ * Menyusun klausa WHERE (beserta parameter binding) untuk hapus log
+ * berdasarkan periode (day/month/year) dan daftar nilainya (bisa lebih dari
+ * satu, karena user bisa centang beberapa hari/bulan sekaligus di
+ * kalender). Validasi format ketat supaya tidak ada input asal-asalan yang
+ * lolos ke query.
+ */
+function buildDeleteWhereClause(string $period, array $values): ?array
+{
+  if (empty($values)) {
+    return null;
+  }
+
+  [$column, $pattern] = match ($period) {
+    'day' => ['DATE(time_received)', '/^\d{4}-\d{2}-\d{2}$/'],
+    'month' => ["DATE_FORMAT(time_received, '%Y-%m')", '/^\d{4}-\d{2}$/'],
+    'year' => ['YEAR(time_received)', '/^\d{4}$/'],
+    default => [null, null],
+  };
+
+  if ($column === null) {
+    return null;
+  }
+
+  $placeholders = [];
+  $params = [];
+  foreach ($values as $i => $value) {
+    if (!preg_match($pattern, $value)) {
+      return null;
+    }
+    $ph = ":val{$i}";
+    $placeholders[] = $ph;
+    $params[$ph] = $value;
+  }
+
+  return [
+    'sql' => "{$column} IN (" . implode(', ', $placeholders) . ")",
+    'params' => $params,
+  ];
 }
 ?>
 <!doctype html>
@@ -172,50 +245,226 @@ if (isset($_GET['action'])) {
     <link rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
     <link rel="stylesheet" href="/css/laporan.css" />
+
+    <style>
+    /* Custom Notification Panel (disamakan dengan grub.php) */
+    .cmd-notification {
+        position: fixed;
+        top: 30px;
+        right: -400px;
+        width: 320px;
+        background-color: #1c1c24;
+        border-radius: 12px;
+        padding: 16px 20px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        z-index: 9999;
+        transition: right 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        border-left: 4px solid transparent;
+    }
+
+    .cmd-notification.show {
+        right: 30px;
+    }
+
+    .cmd-notification.success {
+        border-left-color: #ccff00;
+    }
+
+    .cmd-notification.error {
+        border-left-color: #f43f5e;
+    }
+
+    .cmd-notif-icon {
+        font-size: 28px;
+    }
+
+    .cmd-notification.success .cmd-notif-icon {
+        color: #ccff00;
+    }
+
+    .cmd-notification.error .cmd-notif-icon {
+        color: #f43f5e;
+    }
+
+    .cmd-notif-content {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .cmd-notif-title {
+        color: #ffffff;
+        font-weight: 600;
+        font-size: 14px;
+        margin-bottom: 2px;
+    }
+
+    .cmd-notif-msg {
+        color: #8b8b99;
+        font-size: 12px;
+        line-height: 1.4;
+    }
+
+    /* ==========================================================
+       RAPIKAN LAYOUT (tidak mengubah warna, hanya susunan/spacing)
+       ========================================================== */
+
+    /* Header halaman */
+    .topbar .m-0.text-secondary {
+        margin-top: 2px !important;
+    }
+
+    /* Bar kontrol: dijadikan satu "toolbar card" biar rapi & tidak nempel */
+    .toolbar-card {
+        background: #ffffff;
+        border-radius: 14px;
+        padding: 14px 18px;
+        margin-bottom: 24px;
+        box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+    }
+
+    .toolbar-left {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 14px;
+    }
+
+    .toolbar-right {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 14px;
+        margin-left: auto;
+    }
+
+    /* Legend dirapikan jadi satu grup dengan pemisah tipis */
+    .legend-group {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding-right: 14px;
+        border-right: 1px solid #ecebf1;
+    }
+
+    @media (max-width: 991.98px) {
+        .legend-group {
+            border-right: none;
+            padding-right: 0;
+        }
+    }
+
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12.5px;
+        color: #6b6b78;
+        white-space: nowrap;
+    }
+
+    /* Zona berbahaya (hapus data lama) dipisahkan visual agar tidak tertukar aksi biasa */
+    .danger-zone {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: rgba(244, 63, 94, 0.06);
+        border: 1px solid rgba(244, 63, 94, 0.18);
+        padding: 6px 10px;
+        border-radius: 10px;
+    }
+
+    .danger-zone-label {
+        font-size: 11.5px;
+        font-weight: 600;
+        color: #f43f5e;
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
+        white-space: nowrap;
+        padding-left: 2px;
+    }
+
+    .danger-zone #delete-months {
+        border-radius: 8px;
+        font-size: 13px;
+    }
+
+    .danger-zone #btn-delete-old {
+        font-weight: 600;
+        border: 1px solid rgba(244, 63, 94, 0.35) !important;
+    }
+
+    /* Kartu kalender & panel detail: judul section lebih tegas */
+    .section-card-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #ecebf1;
+    }
+
+    .section-card-title h6 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 15px;
+        color: #1c1c24;
+    }
+
+    /* Panel detail: beri tinggi konsisten & scroll agar tidak "mendorong" layout */
+    #detail-area {
+        max-height: 560px;
+        overflow-y: auto;
+        padding-right: 4px;
+    }
+
+    #detail-area::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    #detail-area::-webkit-scrollbar-thumb {
+        background: #e2e2ea;
+        border-radius: 6px;
+    }
+
+    /* Responsif: di layar kecil, toolbar kanan full width & rapi ke bawah */
+    @media (max-width: 767.98px) {
+        .toolbar-card {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .toolbar-left,
+        .toolbar-right {
+            width: 100%;
+            justify-content: flex-start;
+        }
+
+        .danger-zone {
+            width: 100%;
+            justify-content: space-between;
+        }
+    }
+    </style>
 </head>
 
 <body>
+    <div id="cmdNotification" class="cmd-notification">
+        <span class="material-symbols-outlined cmd-notif-icon" id="cmdNotifIcon">check_circle</span>
+        <div class="cmd-notif-content">
+            <span class="cmd-notif-title" id="cmdNotifTitle">Berhasil</span>
+            <span class="cmd-notif-msg" id="cmdNotifMsg">Pesan di sini.</span>
+        </div>
+    </div>
+
     <div class="d-flex h-100 w-100">
-        <aside class="sidebar d-none d-lg-flex">
-            <div class="sidebar-brand">
-                <span class="fw-bold text-white fs-4 d-flex justify-content-center align-items-center">
-                    <img src="/images/DSI.png" alt="DSI Logo" width="auto" height="180px" class="mt-3" />
-                </span>
-            </div>
-
-            <nav class="nav-sidebar flex-grow-1">
-                <a href="/dashboard" class="nav-link">
-                    <span class="material-symbols-outlined fs-5">grid_view</span>
-                    Dashboard
-                </a>
-                <a href="/grub" class="nav-link">
-                    <span class="material-symbols-outlined fs-5">confirmation_number</span>
-                    Tambah Grub
-                </a>
-                <a href="/agen-cs" class="nav-link">
-                    <span class="material-symbols-outlined fs-5">support_agent</span>
-                    Agent CS
-                </a>
-                <a href="/laporan" class="nav-link active">
-                    <span class="material-symbols-outlined fs-5">bar_chart</span>
-                    Laporan Kinerja
-                </a>
-
-            </nav>
-
-            <div class="sidebar-footer">
-                <div class="avatar">
-                    <span class="material-symbols-outlined fs-6">person</span>
-                </div>
-                <div class="user-info">
-                    <p>Admin DSI</p>
-                    <span>Administrator</span>
-                </div>
-                <a href="#" class="ms-auto text-secondary"><span
-                        class="material-symbols-outlined fs-5">logout</span></a>
-            </div>
-        </aside>
-
         <div class="main-wrapper">
             <header class="topbar">
                 <div>
@@ -294,9 +543,10 @@ if (isset($_GET['action'])) {
                     <div class="d-flex align-items-center gap-3 flex-wrap">
                         <div class="d-flex gap-3">
                             <div class="legend-item"><span class="dot-indicator bg-completed"></span> Tepat waktu</div>
-                            <div class="legend-item"><span class="dot-indicator bg-overdue"></span> Terlambat &gt;3
-                                menit</div>
+                            <div class="legend-item"><span class="dot-indicator bg-overdue"></span> Terlambat</div>
+
                         </div>
+
                         <div class="range-nav">
                             <button id="btn-prev"><span
                                     class="material-symbols-outlined fs-6">chevron_left</span></button>
@@ -304,15 +554,47 @@ if (isset($_GET['action'])) {
                             <button id="btn-next"><span
                                     class="material-symbols-outlined fs-6">chevron_right</span></button>
                         </div>
-                        <button class="btn-today" id="btn-today">Hari ini</button>
 
-                        <select id="delete-months" class="form-select form-select-sm" style="width: auto;">
-                            <option value="1">Hapus &gt; 1 bulan</option>
-                            <option value="3">Hapus &gt; 3 bulan</option>
-                            <option value="6">Hapus &gt; 6 bulan</option>
-                            <option value="12">Hapus &gt; 12 bulan</option>
-                        </select>
-                        <button id="btn-delete-old" class="btn-today" style="color:#f43f5e;">Hapus</button>
+                        <button class="btn-today" id="btn-today">Hari ini</button>
+                        <button class="btn-hapus-chat" id="btn-toggle-delete">
+                            <span class="material-symbols-outlined fs-6">delete</span>
+                            Hapus Chat
+                        </button>
+                    </div>
+                </div>
+
+                <!-- BAR SELEKSI HAPUS (muncul hanya saat mode hapus aktif) -->
+                <div class="selection-bar d-none" id="selection-bar">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="material-symbols-outlined fs-6">touch_app</span>
+                        <span id="selection-count">Pilih hari/bulan pada kalender untuk dihapus</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <button type="button" class="btn-selection-cancel" id="btn-selection-cancel">Batal</button>
+                        <button type="button" class="btn-selection-delete" id="btn-selection-delete" disabled>
+                            <span class="material-symbols-outlined fs-6">delete_forever</span>
+                            Hapus
+                        </button>
+                    </div>
+
+                    <div class="toolbar-right">
+                        <div class="legend-group">
+                            <div class="legend-item"><span class="dot-indicator bg-completed"></span> Tepat waktu
+                            </div>
+                            <div class="legend-item"><span class="dot-indicator bg-overdue"></span> Terlambat &gt;3
+                                menit</div>
+                        </div>
+
+                        <div class="danger-zone">
+                            <span class="danger-zone-label">Hapus data</span>
+                            <select id="delete-months" class="form-select form-select-sm" style="width: auto;">
+                                <option value="1">&gt; 1 bulan</option>
+                                <option value="3">&gt; 3 bulan</option>
+                                <option value="6">&gt; 6 bulan</option>
+                                <option value="12">&gt; 12 bulan</option>
+                            </select>
+                            <button id="btn-delete-old" class="btn-today" style="color:#f43f5e;">Hapus</button>
+                        </div>
                     </div>
                 </div>
 
@@ -320,6 +602,9 @@ if (isset($_GET['action'])) {
                 <div class="row g-4">
                     <div class="col-lg-8">
                         <div class="dashboard-card">
+                            <div class="section-card-title">
+                                <h6>Kalender SLA</h6>
+                            </div>
                             <div id="calendar-area">
                                 <div class="text-center text-secondary py-5">Memuat data...</div>
                             </div>
@@ -327,7 +612,9 @@ if (isset($_GET['action'])) {
                     </div>
                     <div class="col-lg-4">
                         <div class="dashboard-card">
-                            <h6 class="fw-bold mb-3" id="detail-title">Detail Hari</h6>
+                            <div class="section-card-title">
+                                <h6 id="detail-title">Detail Hari</h6>
+                            </div>
                             <div id="detail-area">
                                 <div class="detail-empty">
                                     <span class="material-symbols-outlined">touch_app</span>
@@ -342,130 +629,183 @@ if (isset($_GET['action'])) {
         </div>
     </div>
 
+    <!-- MODAL KONFIRMASI HAPUS -->
+    <div class="modal-overlay d-none" id="delete-confirm-modal">
+        <div class="modal-box">
+            <div class="modal-icon">
+                <span class="material-symbols-outlined">warning</span>
+            </div>
+            <h6 class="fw-bold mb-2">Hapus Log Chat?</h6>
+            <p id="delete-confirm-text" class="mb-4"></p>
+            <div class="d-flex justify-content-end gap-2">
+                <button type="button" class="btn-selection-cancel" id="delete-confirm-no">Batal</button>
+                <button type="button" class="btn-selection-delete" id="delete-confirm-yes">
+                    <span class="material-symbols-outlined fs-6">delete_forever</span>
+                    Ya, Hapus
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        /* ========================================================
+    /* ========================================================
       1. CLOCK
     ======================================================== */
-        setInterval(() => {
-            const now = new Date();
-            const time = now.toLocaleTimeString("id-ID", {
-                hour12: false
-            });
-            document.getElementById("live-clock").innerHTML =
-                `<span class="material-symbols-outlined fs-6">schedule</span> ${time}`;
-        }, 1000);
+    setInterval(() => {
+        const now = new Date();
+        const time = now.toLocaleTimeString("id-ID", {
+            hour12: false
+        });
+        document.getElementById("live-clock").innerHTML =
+            `<span class="material-symbols-outlined fs-6">schedule</span> ${time}`;
+    }, 1000);
 
-        /* ========================================================
-          2. KONSTANTA & HELPER
-        ======================================================== */
-        const DAY_NAMES = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
-        const MONTH_NAMES = [
-            "Januari", "Februari", "Maret", "April", "Mei", "Juni",
-            "Juli", "Agustus", "September", "Oktober", "November", "Desember"
-        ];
+    /* ========================================================
+      1b. CUSTOM NOTIFICATION (disamakan dengan grub.php)
+    ======================================================== */
+    let notifTimeout;
 
-        function pad(n) {
-            return n.toString().padStart(2, "0");
+    function showCmdNotification(title, message, type = 'success') {
+        const notifBox = document.getElementById('cmdNotification');
+        const notifIcon = document.getElementById('cmdNotifIcon');
+        const notifTitle = document.getElementById('cmdNotifTitle');
+        const notifMsg = document.getElementById('cmdNotifMsg');
+
+        notifBox.className = 'cmd-notification';
+        clearTimeout(notifTimeout);
+
+        if (type === 'success') {
+            notifBox.classList.add('success');
+            notifIcon.textContent = 'check_circle';
+        } else {
+            notifBox.classList.add('error');
+            notifIcon.textContent = 'error';
         }
 
-        function dateKey(d) {
-            return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+        notifTitle.textContent = title;
+        notifMsg.textContent = message;
+
+        setTimeout(() => {
+            notifBox.classList.add('show');
+        }, 50);
+        notifTimeout = setTimeout(() => {
+            notifBox.classList.remove('show');
+        }, 3500);
+    }
+
+    /* ========================================================
+      2. KONSTANTA & HELPER
+    ======================================================== */
+    const DAY_NAMES = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
+    const MONTH_NAMES = [
+        "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+        "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+    ];
+
+    function pad(n) {
+        return n.toString().padStart(2, "0");
+    }
+
+    function dateKey(d) {
+        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    }
+
+    function startOfWeek(d) {
+        const copy = new Date(d);
+        const day = (copy.getDay() + 6) % 7; // Senin = 0
+        copy.setDate(copy.getDate() - day);
+        copy.setHours(0, 0, 0, 0);
+        return copy;
+    }
+
+    function formatDuration(sec) {
+        if (sec === null) return "-";
+        if (sec < 60) return `${sec} detik`;
+        const m = Math.floor(sec / 60);
+        const s = sec % 60;
+        return `${m} menit ${s} detik`;
+    }
+
+    /* ========================================================
+      3. STATE
+    ======================================================== */
+    let currentView = "week"; // week | month | year
+    let refDate = new Date();
+    let selectedDate = null;
+    let rangeCache = {}; // key tanggal -> {red, green, total}
+
+    /* ========================================================
+      4. FETCH DATA DARI SERVER (endpoint action=range)
+    ======================================================== */
+    async function fetchRange(view, date) {
+        const res = await fetch(`?action=range&view=${view}&date=${dateKey(date)}`);
+        const json = await res.json();
+        if (json.error) {
+            console.error(json.error);
+            return {};
         }
+        return json.data || {};
+    }
 
-        function startOfWeek(d) {
-            const copy = new Date(d);
-            const day = (copy.getDay() + 6) % 7; // Senin = 0
-            copy.setDate(copy.getDate() - day);
-            copy.setHours(0, 0, 0, 0);
-            return copy;
+    async function fetchDetail(date) {
+        const res = await fetch(`?action=detail&date=${date}`);
+        return await res.json();
+    }
+
+    function getDay(dateStr) {
+        return rangeCache[dateStr] || {
+            red: 0,
+            green: 0,
+            total: 0
+        };
+    }
+
+    function renderStats(entries, subLabel) {
+        let total = 0,
+            green = 0,
+            red = 0;
+        entries.forEach(e => {
+            total += e.total;
+            green += e.green;
+            red += e.red;
+        });
+        const compliance = total ? Math.round((green / total) * 100) : 0;
+        document.getElementById("stat-total").textContent = total;
+        document.getElementById("stat-green").textContent = green;
+        document.getElementById("stat-red").textContent = red;
+        document.getElementById("stat-compliance").textContent = compliance + "%";
+        document.getElementById("stat-total-sub").textContent = subLabel;
+    }
+
+    /* ========================================================
+      5. RENDER: WEEK VIEW
+    ======================================================== */
+    async function renderWeek() {
+        const start = startOfWeek(refDate);
+        const days = [];
+        for (let i = 0; i < 7; i++) {
+            const d = new Date(start);
+            d.setDate(start.getDate() + i);
+            days.push(d);
         }
+        const end = days[6];
+        document.getElementById("range-label").textContent =
+            `${start.getDate()} - ${end.getDate()} ${MONTH_NAMES[end.getMonth()]} ${end.getFullYear()}`;
 
-        function formatDuration(sec) {
-            if (sec === null) return "-";
-            if (sec < 60) return `${sec} detik`;
-            const m = Math.floor(sec / 60);
-            const s = sec % 60;
-            return `${m} menit ${s} detik`;
-        }
+        rangeCache = await fetchRange("week", start);
+        const entries = days.map(d => getDay(dateKey(d)));
+        renderStats(entries, "pada minggu ini");
 
-        /* ========================================================
-          3. STATE
-        ======================================================== */
-        let currentView = "week"; // week | month | year
-        let refDate = new Date();
-        let selectedDate = null;
-        let rangeCache = {}; // key tanggal -> {red, green, total}
-
-        /* ========================================================
-          4. FETCH DATA DARI SERVER (endpoint action=range)
-        ======================================================== */
-        async function fetchRange(view, date) {
-            const res = await fetch(`?action=range&view=${view}&date=${dateKey(date)}`);
-            const json = await res.json();
-            if (json.error) {
-                console.error(json.error);
-                return {};
-            }
-            return json.data || {};
-        }
-
-        async function fetchDetail(date) {
-            const res = await fetch(`?action=detail&date=${date}`);
-            return await res.json();
-        }
-
-        function getDay(dateStr) {
-            return rangeCache[dateStr] || {
-                red: 0,
-                green: 0,
-                total: 0
-            };
-        }
-
-        function renderStats(entries, subLabel) {
-            let total = 0,
-                green = 0,
-                red = 0;
-            entries.forEach(e => {
-                total += e.total;
-                green += e.green;
-                red += e.red;
-            });
-            const compliance = total ? Math.round((green / total) * 100) : 0;
-            document.getElementById("stat-total").textContent = total;
-            document.getElementById("stat-green").textContent = green;
-            document.getElementById("stat-red").textContent = red;
-            document.getElementById("stat-compliance").textContent = compliance + "%";
-            document.getElementById("stat-total-sub").textContent = subLabel;
-        }
-
-        /* ========================================================
-          5. RENDER: WEEK VIEW
-        ======================================================== */
-        async function renderWeek() {
-            const start = startOfWeek(refDate);
-            const days = [];
-            for (let i = 0; i < 7; i++) {
-                const d = new Date(start);
-                d.setDate(start.getDate() + i);
-                days.push(d);
-            }
-            const end = days[6];
-            document.getElementById("range-label").textContent =
-                `${start.getDate()} - ${end.getDate()} ${MONTH_NAMES[end.getMonth()]} ${end.getFullYear()}`;
-
-            rangeCache = await fetchRange("week", start);
-            const entries = days.map(d => getDay(dateKey(d)));
-            renderStats(entries, "pada minggu ini");
-
-            const today = dateKey(new Date());
-            let html = '<div class="week-grid">';
-            days.forEach(d => {
-                const key = dateKey(d);
-                const data = getDay(key);
-                const isSelected = selectedDate === key;
-                html += `
-              <div class="week-cell ${isSelected ? 'selected' : ''}" onclick="selectDay('${key}')">
+        const today = dateKey(new Date());
+        let html = '<div class="week-grid">';
+        days.forEach(d => {
+            const key = dateKey(d);
+            const data = getDay(key);
+            const isSelected = selectedDate === key;
+            const isPicked = selectionMode && selectedKeys.has(key);
+            html += `
+              <div class="week-cell ${isSelected ? 'selected' : ''} ${selectionMode ? 'selecting' : ''} ${isPicked ? 'picked' : ''}" onclick="handleDayClick('${key}', this)">
+                ${selectionMode ? `<span class="pick-check"></span>` : ''}
                 <div class="wc-day">${DAY_NAMES[d.getDay()]}${key === today ? ' &middot; hari ini' : ''}</div>
                 <div class="wc-date">${d.getDate()}</div>
                 <div class="wc-badges">
@@ -478,48 +818,50 @@ if (isset($_GET['action'])) {
           }
                 </div>
               </div>`;
-            });
-            html += '</div>';
-            document.getElementById("calendar-area").innerHTML = html;
+        });
+        html += '</div>';
+        document.getElementById("calendar-area").innerHTML = html;
+    }
+
+    /* ========================================================
+      6. RENDER: MONTH VIEW
+    ======================================================== */
+    async function renderMonth() {
+        const year = refDate.getFullYear();
+        const month = refDate.getMonth();
+        document.getElementById("range-label").textContent = `${MONTH_NAMES[month]} ${year}`;
+
+        const firstOfMonth = new Date(year, month, 1);
+        const gridStart = startOfWeek(firstOfMonth);
+        const cells = [];
+        for (let i = 0; i < 42; i++) {
+            const d = new Date(gridStart);
+            d.setDate(gridStart.getDate() + i);
+            cells.push(d);
         }
 
-        /* ========================================================
-          6. RENDER: MONTH VIEW
-        ======================================================== */
-        async function renderMonth() {
-            const year = refDate.getFullYear();
-            const month = refDate.getMonth();
-            document.getElementById("range-label").textContent = `${MONTH_NAMES[month]} ${year}`;
+        rangeCache = await fetchRange("month", firstOfMonth);
+        const monthEntries = cells.filter(d => d.getMonth() === month).map(d => getDay(dateKey(d)));
+        renderStats(monthEntries, `pada ${MONTH_NAMES[month]} ${year}`);
 
-            const firstOfMonth = new Date(year, month, 1);
-            const gridStart = startOfWeek(firstOfMonth);
-            const cells = [];
-            for (let i = 0; i < 42; i++) {
-                const d = new Date(gridStart);
-                d.setDate(gridStart.getDate() + i);
-                cells.push(d);
-            }
+        const today = dateKey(new Date());
+        let html = '<div class="cal-grid mb-1">';
+        ["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"].forEach(d => {
+            html += `<div class="cal-weekday">${d}</div>`;
+        });
+        html += '</div><div class="cal-grid">';
 
-            rangeCache = await fetchRange("month", firstOfMonth);
-            const monthEntries = cells.filter(d => d.getMonth() === month).map(d => getDay(dateKey(d)));
-            renderStats(monthEntries, `pada ${MONTH_NAMES[month]} ${year}`);
-
-            const today = dateKey(new Date());
-            let html = '<div class="cal-grid mb-1">';
-            ["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"].forEach(d => {
-                html += `<div class="cal-weekday">${d}</div>`;
-            });
-            html += '</div><div class="cal-grid">';
-
-            cells.forEach(d => {
-                const outside = d.getMonth() !== month;
-                const key = dateKey(d);
-                const data = getDay(key);
-                const isToday = key === today;
-                const isSelected = selectedDate === key;
-                html += `
-              <div class="cal-cell ${outside ? 'outside' : ''} ${isToday ? 'is-today' : ''} ${isSelected ? 'selected' : ''}"
-                  ${outside ? '' : `onclick="selectDay('${key}')"`}>
+        cells.forEach(d => {
+            const outside = d.getMonth() !== month;
+            const key = dateKey(d);
+            const data = getDay(key);
+            const isToday = key === today;
+            const isSelected = selectedDate === key;
+            const isPicked = !outside && selectionMode && selectedKeys.has(key);
+            html += `
+              <div class="cal-cell ${outside ? 'outside' : ''} ${isToday ? 'is-today' : ''} ${isSelected ? 'selected' : ''} ${!outside && selectionMode ? 'selecting' : ''} ${isPicked ? 'picked' : ''}"
+                  ${outside ? '' : `onclick="handleDayClick('${key}', this)"`}>
+                ${!outside && selectionMode ? `<span class="pick-check"></span>` : ''}
                 <div class="cal-date-num">${d.getDate()}</div>
                 <div class="cal-badges">
                   ${outside ? '' : (data.total === 0
@@ -530,41 +872,46 @@ if (isset($_GET['action'])) {
                     `)}
                 </div>
               </div>`;
-            });
-            html += '</div>';
-            document.getElementById("calendar-area").innerHTML = html;
-        }
+        });
+        html += '</div>';
+        document.getElementById("calendar-area").innerHTML = html;
+    }
 
-        /* ========================================================
-          7. RENDER: YEAR VIEW
-        ======================================================== */
-        async function renderYear() {
-            const year = refDate.getFullYear();
-            document.getElementById("range-label").textContent = `${year}`;
+    /* ========================================================
+      7. RENDER: YEAR VIEW
+    ======================================================== */
+    async function renderYear() {
+        const year = refDate.getFullYear();
+        document.getElementById("range-label").textContent = `${year}`;
 
-            rangeCache = await fetchRange("year", new Date(year, 0, 1));
+        rangeCache = await fetchRange("year", new Date(year, 0, 1));
 
-            let yearTotalRed = 0,
-                yearTotalGreen = 0;
-            let html = '<div class="year-grid">';
+        let yearTotalRed = 0,
+            yearTotalGreen = 0;
+        yearMonthTotals = {};
+        let html = '<div class="year-grid">';
 
-            for (let m = 0; m < 12; m++) {
-                const daysInMonth = new Date(year, m + 1, 0).getDate();
-                let red = 0,
-                    green = 0;
-                for (let dnum = 1; dnum <= daysInMonth; dnum++) {
-                    const data = getDay(dateKey(new Date(year, m, dnum)));
-                    red += data.red;
-                    green += data.green;
-                }
-                yearTotalRed += red;
-                yearTotalGreen += green;
-                const total = red + green;
-                const redPct = total ? Math.round((red / total) * 100) : 0;
-                const greenPct = 100 - redPct;
+        for (let m = 0; m < 12; m++) {
+            const daysInMonth = new Date(year, m + 1, 0).getDate();
+            let red = 0,
+                green = 0;
+            for (let dnum = 1; dnum <= daysInMonth; dnum++) {
+                const data = getDay(dateKey(new Date(year, m, dnum)));
+                red += data.red;
+                green += data.green;
+            }
+            yearTotalRed += red;
+            yearTotalGreen += green;
+            const total = red + green;
+            const monthKey = `${year}-${pad(m + 1)}`;
+            yearMonthTotals[monthKey] = total;
+            const redPct = total ? Math.round((red / total) * 100) : 0;
+            const greenPct = 100 - redPct;
+            const isPicked = selectionMode && selectedKeys.has(monthKey);
 
-                html += `
-              <div class="year-cell" onclick="jumpToMonth(${year}, ${m})">
+            html += `
+              <div class="year-cell ${selectionMode ? 'selecting' : ''} ${isPicked ? 'picked' : ''}" onclick="handleMonthCellClick(${year}, ${m}, this)">
+                ${selectionMode ? `<span class="pick-check"></span>` : ''}
                 <div class="yc-month">${MONTH_NAMES[m]}</div>
                 <div class="yc-bar">
                   ${total ? `<div class="seg-green" style="width:${greenPct}%"></div><div class="seg-red" style="width:${redPct}%"></div>` : ''}
@@ -574,55 +921,55 @@ if (isset($_GET['action'])) {
                   <span class="text-overdue">${red} telat</span>
                 </div>
               </div>`;
-            }
-            html += '</div>';
-            document.getElementById("calendar-area").innerHTML = html;
-
-            const totalAll = yearTotalRed + yearTotalGreen;
-            document.getElementById("stat-total").textContent = totalAll;
-            document.getElementById("stat-green").textContent = yearTotalGreen;
-            document.getElementById("stat-red").textContent = yearTotalRed;
-            document.getElementById("stat-compliance").textContent =
-                (totalAll ? Math.round((yearTotalGreen / totalAll) * 100) : 0) + "%";
-            document.getElementById("stat-total-sub").textContent = `sepanjang tahun ${year}`;
         }
+        html += '</div>';
+        document.getElementById("calendar-area").innerHTML = html;
 
-        function jumpToMonth(year, month) {
-            refDate = new Date(year, month, 1);
-            currentView = "month";
-            document.querySelectorAll(".view-switch button").forEach(b => {
-                b.classList.toggle("active", b.dataset.view === "month");
-            });
-            render();
-        }
+        const totalAll = yearTotalRed + yearTotalGreen;
+        document.getElementById("stat-total").textContent = totalAll;
+        document.getElementById("stat-green").textContent = yearTotalGreen;
+        document.getElementById("stat-red").textContent = yearTotalRed;
+        document.getElementById("stat-compliance").textContent =
+            (totalAll ? Math.round((yearTotalGreen / totalAll) * 100) : 0) + "%";
+        document.getElementById("stat-total-sub").textContent = `sepanjang tahun ${year}`;
+    }
 
-        /* ========================================================
-          8. DETAIL PANEL (ambil data asli per chat dari server)
-        ======================================================== */
-        async function selectDay(key) {
-            selectedDate = key;
-            const [y, m, d] = key.split("-").map(Number);
+    function jumpToMonth(year, month) {
+        refDate = new Date(year, month, 1);
+        currentView = "month";
+        document.querySelectorAll(".view-switch button").forEach(b => {
+            b.classList.toggle("active", b.dataset.view === "month");
+        });
+        render();
+    }
 
-            document.getElementById("detail-title").textContent =
-                `Detail - ${d} ${MONTH_NAMES[m - 1]} ${y}`;
-            document.getElementById("detail-area").innerHTML =
-                '<div class="text-center text-secondary py-4" style="font-size:13px">Memuat detail...</div>';
+    /* ========================================================
+      8. DETAIL PANEL (ambil data asli per chat dari server)
+    ======================================================== */
+    async function selectDay(key) {
+        selectedDate = key;
+        const [y, m, d] = key.split("-").map(Number);
 
-            const result = await fetchDetail(key);
-            const items = result.items || [];
+        document.getElementById("detail-title").textContent =
+            `Detail - ${d} ${MONTH_NAMES[m - 1]} ${y}`;
+        document.getElementById("detail-area").innerHTML =
+            '<div class="text-center text-secondary py-4" style="font-size:13px">Memuat detail...</div>';
 
-            if (items.length === 0) {
-                document.getElementById("detail-area").innerHTML = `
+        const result = await fetchDetail(key);
+        const items = result.items || [];
+
+        if (items.length === 0) {
+            document.getElementById("detail-area").innerHTML = `
               <div class="detail-empty">
                 <span class="material-symbols-outlined">inbox</span>
                 <div style="font-size: 13px">Tidak ada chat masuk pada tanggal ini.</div>
               </div>`;
-            } else {
-                let html = '<div class="detail-list">';
-                items.forEach(it => {
-                    const label = it.status === 'red' ? 'Terlambat' : (it.status === 'green' ? 'Tepat waktu' :
-                        'Menunggu');
-                    html += `
+        } else {
+            let html = '<div class="detail-list">';
+            items.forEach(it => {
+                const label = it.status === 'red' ? 'Terlambat' : (it.status === 'green' ? 'Tepat waktu' :
+                    'Menunggu');
+                html += `
                 <div class="detail-item">
                   <div class="di-top">
                     <span class="di-phone">${it.phone}</span>
@@ -631,80 +978,243 @@ if (isset($_GET['action'])) {
                   <div class="di-msg">${it.msg}</div>
                   <div class="di-meta">Agen: ${it.staff} &middot; Waktu respon: ${formatDuration(it.seconds)}</div>
                 </div>`;
-                });
-                html += '</div>';
-                document.getElementById("detail-area").innerHTML = html;
+            });
+            html += '</div>';
+            document.getElementById("detail-area").innerHTML = html;
+        }
+
+        if (currentView === "week") renderWeek();
+        if (currentView === "month") renderMonth();
+    }
+
+    /* ========================================================
+      9. NAVIGATION
+    ======================================================== */
+    function render() {
+        if (currentView === "week") renderWeek();
+        else if (currentView === "month") renderMonth();
+        else renderYear();
+    }
+
+    document.querySelectorAll(".view-switch button").forEach(btn => {
+        btn.addEventListener("click", () => {
+            currentView = btn.dataset.view;
+            document.querySelectorAll(".view-switch button").forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
+            render();
+        });
+    });
+
+    document.getElementById("btn-prev").addEventListener("click", () => {
+        if (currentView === "week") refDate.setDate(refDate.getDate() - 7);
+        else if (currentView === "month") refDate.setMonth(refDate.getMonth() - 1);
+        else refDate.setFullYear(refDate.getFullYear() - 1);
+        render();
+    });
+    document.getElementById("btn-next").addEventListener("click", () => {
+        if (currentView === "week") refDate.setDate(refDate.getDate() + 7);
+        else if (currentView === "month") refDate.setMonth(refDate.getMonth() + 1);
+        else refDate.setFullYear(refDate.getFullYear() + 1);
+        render();
+    });
+    document.getElementById("btn-today").addEventListener("click", () => {
+        refDate = new Date();
+        render();
+    });
+    /* ========================================================
+              10. DELETE DATA LAMA
+            ======================================================== */
+    document.getElementById("btn-delete-old").addEventListener("click", async () => {
+        const months = document.getElementById("delete-months").value;
+        const confirmMsg =
+            `Peringatan: Kamu akan menghapus SELURUH histori chat yang lebih lama dari ${months} bulan. Tindakan ini tidak bisa dibatalkan. Lanjutkan?`;
+
+        if (!confirm(confirmMsg)) return;
+
+        try {
+            // Mengubah fetch ke metode GET dan menyisipkan parameter 'months' ke dalam URL
+            const res = await fetch(`?action=delete&months=${months}`);
+
+            // Pengecekan jika response dari server bukan JSON (misal error HTML)
+            if (!res.ok) {
+                throw new Error(`HTTP error! status: ${res.status}`);
             }
 
-            if (currentView === "week") renderWeek();
-            if (currentView === "month") renderMonth();
+            const json = await res.json();
+
+            if (json.error) {
+                showCmdNotification('Gagal Hapus', json.error, 'error');
+                return;
+            }
+
+            showCmdNotification('Data Dihapus', `${json.deleted} data berhasil dihapus.`, 'success');
+            render(); // Memuat ulang kalender dan statistik secara otomatis
+        } catch (err) {
+            showCmdNotification('Error Jaringan', 'Terjadi kesalahan saat menghubungi server: ' + err
+                .message, 'error');
+            console.error(err);
         }
+    });
 
-        /* ========================================================
-          9. NAVIGATION
-        ======================================================== */
-        function render() {
-            if (currentView === "week") renderWeek();
-            else if (currentView === "month") renderMonth();
-            else renderYear();
+    // Render awal
+    render();
+
+    /* ========================================================
+      10. MODE HAPUS CHAT (multi-select langsung di kalender)
+    ======================================================== */
+    let selectionMode = false;
+    let selectedKeys = new Set(); // "YYYY-MM-DD" (week/month) atau "YYYY-MM" (year)
+    let yearMonthTotals = {}; // cache total log per bulan saat di year view, key "YYYY-MM"
+
+    const btnToggleDelete = document.getElementById("btn-toggle-delete");
+    const selectionBar = document.getElementById("selection-bar");
+    const selectionCount = document.getElementById("selection-count");
+    const btnSelectionCancel = document.getElementById("btn-selection-cancel");
+    const btnSelectionDelete = document.getElementById("btn-selection-delete");
+
+    function getSelectionUnit() {
+        return currentView === "year" ? "month" : "day";
+    }
+
+    function selectedTotal() {
+        let total = 0;
+        selectedKeys.forEach(key => {
+            if (getSelectionUnit() === "day") {
+                total += getDay(key).total;
+            } else {
+                total += yearMonthTotals[key] || 0;
+            }
+        });
+        return total;
+    }
+
+    function updateSelectionBar() {
+        const n = selectedKeys.size;
+        if (n === 0) {
+            selectionCount.textContent = "Pilih hari/bulan pada kalender untuk dihapus";
+            btnSelectionDelete.disabled = true;
+        } else {
+            const unit = getSelectionUnit() === "day" ? "hari" : "bulan";
+            selectionCount.textContent = `${n} ${unit} dipilih \u00b7 ${selectedTotal()} log chat`;
+            btnSelectionDelete.disabled = selectedTotal() === 0;
         }
+    }
 
-        document.querySelectorAll(".view-switch button").forEach(btn => {
-            btn.addEventListener("click", () => {
-                currentView = btn.dataset.view;
-                document.querySelectorAll(".view-switch button").forEach(b => b.classList.remove("active"));
-                btn.classList.add("active");
-                render();
-            });
-        });
+    function toggleSelectionMode(forceOff = false) {
+        selectionMode = forceOff ? false : !selectionMode;
+        selectedKeys.clear();
+        btnToggleDelete.classList.toggle("active", selectionMode);
+        btnToggleDelete.innerHTML = selectionMode ?
+            '<span class="material-symbols-outlined fs-6">close</span> Batal Pilih' :
+            '<span class="material-symbols-outlined fs-6">delete</span> Hapus Chat';
+        selectionBar.classList.toggle("d-none", !selectionMode);
+        updateSelectionBar();
+        render();
+    }
 
-        document.getElementById("btn-prev").addEventListener("click", () => {
-            if (currentView === "week") refDate.setDate(refDate.getDate() - 7);
-            else if (currentView === "month") refDate.setMonth(refDate.getMonth() - 1);
-            else refDate.setFullYear(refDate.getFullYear() - 1);
-            render();
-        });
-        document.getElementById("btn-next").addEventListener("click", () => {
-            if (currentView === "week") refDate.setDate(refDate.getDate() + 7);
-            else if (currentView === "month") refDate.setMonth(refDate.getMonth() + 1);
-            else refDate.setFullYear(refDate.getFullYear() + 1);
-            render();
-        });
-        document.getElementById("btn-today").addEventListener("click", () => {
-            refDate = new Date();
-            render();
-        });
+    function toggleKeySelection(key, el) {
+        const picked = !selectedKeys.has(key);
+        if (picked) selectedKeys.add(key);
+        else selectedKeys.delete(key);
+        updateSelectionBar();
 
-        /* ========================================================
-          10. DELETE DATA LAMA
-        ======================================================== */
-        document.getElementById("btn-delete-old").addEventListener("click", async () => {
-            const months = document.getElementById("delete-months").value;
-            const confirmMsg = `Yakin hapus semua chat terselesaikan yang lebih lama dari ${months} bulan? Tidak bisa dibatalkan.`;
-            if (!confirm(confirmMsg)) return;
+        // Update tampilan cell langsung tanpa re-fetch/re-render seluruh kalender
+        if (el) el.classList.toggle("picked", picked);
+    }
 
-            const res = await fetch(`?action=delete`, {
+    function handleDayClick(key, el) {
+        if (selectionMode) toggleKeySelection(key, el);
+        else selectDay(key);
+    }
+
+    function handleMonthCellClick(year, month, el) {
+        const key = `${year}-${pad(month + 1)}`;
+        if (selectionMode) toggleKeySelection(key, el);
+        else jumpToMonth(year, month);
+    }
+
+    btnToggleDelete.addEventListener("click", () => toggleSelectionMode());
+    btnSelectionCancel.addEventListener("click", () => toggleSelectionMode(true));
+
+    // Selection dibersihkan tiap kali pindah periode/navigasi supaya tidak nyangkut
+    document.getElementById("btn-prev").addEventListener("click", () => {
+        selectedKeys.clear();
+        updateSelectionBar();
+    });
+    document.getElementById("btn-next").addEventListener("click", () => {
+        selectedKeys.clear();
+        updateSelectionBar();
+    });
+    document.getElementById("btn-today").addEventListener("click", () => {
+        selectedKeys.clear();
+        updateSelectionBar();
+    });
+    document.querySelectorAll(".view-switch button").forEach(btn => {
+        btn.addEventListener("click", () => {
+            selectedKeys.clear();
+            updateSelectionBar();
+        });
+    });
+
+    /* ---- Modal konfirmasi ---- */
+    const modalOverlay = document.getElementById("delete-confirm-modal");
+    const modalText = document.getElementById("delete-confirm-text");
+    const modalConfirm = document.getElementById("delete-confirm-yes");
+    const modalCancel = document.getElementById("delete-confirm-no");
+
+    function openConfirmModal(text) {
+        modalText.textContent = text;
+        modalOverlay.classList.remove("d-none");
+    }
+
+    function closeConfirmModal() {
+        modalOverlay.classList.add("d-none");
+    }
+
+    modalCancel.addEventListener("click", closeConfirmModal);
+    modalOverlay.addEventListener("click", (e) => {
+        if (e.target === modalOverlay) closeConfirmModal();
+    });
+
+    btnSelectionDelete.addEventListener("click", () => {
+        if (selectedKeys.size === 0) return;
+        const unit = getSelectionUnit() === "day" ? "hari" : "bulan";
+        openConfirmModal(
+            `Yakin ingin menghapus log chat untuk ${selectedKeys.size} ${unit} yang dipilih (total ${selectedTotal()} log)? Tindakan ini tidak dapat dibatalkan.`
+        );
+    });
+
+    modalConfirm.addEventListener("click", async () => {
+        closeConfirmModal();
+        const period = getSelectionUnit();
+        const values = Array.from(selectedKeys).join(",");
+
+        btnSelectionDelete.disabled = true;
+        selectionCount.textContent = "Menghapus log...";
+
+        try {
+            const res = await fetch("", {
                 method: "POST",
                 headers: {
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/x-www-form-urlencoded"
                 },
-                body: JSON.stringify({
-                    months: parseInt(months, 10)
-                })
+                body: `action=delete&period=${period}&values=${encodeURIComponent(values)}`,
             });
             const json = await res.json();
 
             if (json.error) {
-                alert("Gagal: " + json.error);
+                selectionCount.textContent = json.error;
+                btnSelectionDelete.disabled = false;
                 return;
             }
 
-            alert(`${json.deleted} data berhasil dihapus.`);
-            render();
-        });
-
-        // Render awal
-        render();
+            toggleSelectionMode(true);
+            if (selectedDate) selectDay(selectedDate);
+        } catch (err) {
+            selectionCount.textContent = "Gagal menghapus log. Coba lagi.";
+            btnSelectionDelete.disabled = false;
+        }
+    });
     </script>
 </body>
 
